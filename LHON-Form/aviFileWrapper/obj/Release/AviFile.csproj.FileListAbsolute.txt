@@ -1,0 +1,3 @@
+D:\Dropbox\PhD\LHON\LHON Matlab\LHON-Form\aviFileWrapper\bin\Release\AviFile.dll
+D:\Dropbox\PhD\LHON\LHON Matlab\LHON-Form\aviFileWrapper\obj\Release\AviFile.csprojResolveAssemblyReference.cache
+D:\Dropbox\PhD\LHON\LHON Matlab\LHON-Form\aviFileWrapper\obj\Release\AviFile.dll
