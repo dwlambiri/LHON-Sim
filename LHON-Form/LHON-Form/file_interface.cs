@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 
@@ -81,11 +80,11 @@ namespace LHON_Form
 
             for (int a = 0; a < mdl.n_axons; a++)
             {
-                float r = mdl.axon_coor[a][2];
-                if (r < small_medium_thrs_r) { size_idx[a] = 0; n_axons[0]++; }
-                else if (r > medium_large_thrs_r) { size_idx[a] = 2; n_axons[2]++; }
+                float radius = mdl.axon_coor[a][2];
+                if (radius < small_medium_thrs_r) { size_idx[a] = 0; n_axons[0]++; }
+                else if (radius > medium_large_thrs_r) { size_idx[a] = 2; n_axons[2]++; }
                 else { size_idx[a] = 1; n_axons[1]++; }
-                sum_rad_alive += r;
+                sum_rad_alive += radius;
             }
 
             int[,] alive = new int[iteration, 3];
@@ -108,9 +107,9 @@ namespace LHON_Form
                     {
                         int j = size_idx[a];
                         dead[i, j]++;
-                        float r = mdl.axon_coor[a][2];
-                        sum_rad_alive -= r;
-                        sum_rad_dead += r;
+                        float radius = mdl.axon_coor[a][2];
+                        sum_rad_alive -= radius;
+                        sum_rad_dead += radius;
                         mean_dia_alive[i] = sum_rad_alive / (n_axons[j] - dead[i, j]);
                         mean_dia_dead[i] = sum_rad_dead / dead[i, j];
                     }
@@ -158,8 +157,7 @@ namespace LHON_Form
         private void Save_Progress(string progression_fil_name)
         {
             Save_SIM_Table_CSV(progression_fil_name);
-            return;
-
+/*
             // Death iteration
             gpu.CopyFromDevice(death_itr_dev, death_itr);
 
@@ -199,7 +197,7 @@ namespace LHON_Form
                     Append_stat_ln("Sim Progress saved to " + progression_fil_name);
                 }
             }
-
+*/
         }
 
         // ====================== Binary reader . writer

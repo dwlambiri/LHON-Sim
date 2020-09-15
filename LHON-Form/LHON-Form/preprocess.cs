@@ -64,7 +64,7 @@ namespace LHON_Form
         // ====================================
         //        Model Preprocessing
         // ====================================
-        private ushort calc_im_siz()
+        private ushort Calc_im_siz()
         {
             return (ushort)((mdl_nerve_r * setts.resolution + 2) * 2);
         }
@@ -116,7 +116,7 @@ namespace LHON_Form
 
             Update_bottom_stat("Preprocessing ...");
 
-            im_size = calc_im_siz();
+            im_size = Calc_im_siz();
             Update_image_siz_lbl();
 
             Init_bmp_write();
@@ -150,7 +150,7 @@ namespace LHON_Form
 
             death_itr = new uint[mdl.n_axons];
 
-            axon_lbl = new Axon_lbl_class[mdl.n_axons]; // for GUI
+            axon_lbl = new AxonLabelClass[mdl.n_axons]; // for GUI
 
             // ======== Local Constants =========
             int nerve_cent_pix = im_size / 2;
@@ -161,14 +161,15 @@ namespace LHON_Form
             int vein_r_pix_2 = Pow2(vein_r_pix);
 
             // GPU init for prep0 and prep1
-            GPGPU gpu = CudafyHost.GetDevice(CudafyModes.Target, CudafyModes.DeviceId);
-            gpu.FreeAll(); gpu.Synchronize();
+            GPGPU localGPUVar = CudafyHost.GetDevice(CudafyModes.Target, CudafyModes.DeviceId);
+            localGPUVar.FreeAll(); 
+            localGPUVar.Synchronize();
 
             pix_idx_num = 0;
-            rate_dev = gpu.Allocate<float>(im_size * im_size * 4);
-            detox_dev = gpu.Allocate<float>(im_size * im_size);
-            pix_idx_dev = gpu.Allocate<int>(im_size * im_size);
-            byte[] pix_out_of_nerve_dev = gpu.Allocate<byte>(im_size * im_size);
+            rate_dev = localGPUVar.Allocate<float>(im_size * im_size * 4);
+            detox_dev = localGPUVar.Allocate<float>(im_size * im_size);
+            pix_idx_dev = localGPUVar.Allocate<int>(im_size * im_size);
+            byte[] pix_out_of_nerve_dev = localGPUVar.Allocate<byte>(im_size * im_size);
             byte[] pix_out_of_nerve = new byte[im_size * im_size];
 
             int prep_siz = 32;
@@ -176,14 +177,14 @@ namespace LHON_Form
             int tmp = (int)Math.Ceiling((double)im_size / (double)prep_siz);
             dim3 grid_siz_prep = new dim3(tmp, tmp);
 
-            gpu.Launch(grid_siz_prep, block_siz_prep).cuda_prep0(im_size, nerve_cent_pix, nerve_r_pix_2, vein_r_pix_2, k_rate_extra, k_detox_extra,
+            localGPUVar.Launch(grid_siz_prep, block_siz_prep).cuda_prep0(im_size, nerve_cent_pix, nerve_r_pix_2, vein_r_pix_2, k_rate_extra, k_detox_extra,
                 pix_out_of_nerve_dev, rate_dev, detox_dev);
 
-            gpu.Synchronize();
+            localGPUVar.Synchronize();
 
-            gpu.CopyFromDevice(pix_out_of_nerve_dev, pix_out_of_nerve);
-            gpu.CopyFromDevice(rate_dev, rate);
-            gpu.CopyFromDevice(detox_dev, detox);
+            localGPUVar.CopyFromDevice(pix_out_of_nerve_dev, pix_out_of_nerve);
+            localGPUVar.CopyFromDevice(rate_dev, rate);
+            localGPUVar.CopyFromDevice(detox_dev, detox);
 
             prep_prof.Time(1);
 
@@ -214,20 +215,20 @@ namespace LHON_Form
                 axon_is_init_insult[i] = Pow2(insult_r - mdl.axon_coor[i][2]) > Pow2(insult_x - mdl.axon_coor[i][0]) + Pow2(insult_y - mdl.axon_coor[i][1]);
 
                 // Change coordinates from um to pixels
-                float xc = nerve_cent_pix + mdl.axon_coor[i][0] * res;
-                float yc = nerve_cent_pix + mdl.axon_coor[i][1] * res;
-                float rc = mdl.axon_coor[i][2] * res;
-                AxCorPix[i, 0] = xc; AxCorPix[i, 1] = yc; AxCorPix[i, 2] = rc;
+                float xCenter = nerve_cent_pix + mdl.axon_coor[i][0] * res;
+                float yCenter = nerve_cent_pix + mdl.axon_coor[i][1] * res;
+                float radiusCircle = mdl.axon_coor[i][2] * res;
+                AxCorPix[i, 0] = xCenter; AxCorPix[i, 1] = yCenter; AxCorPix[i, 2] = radiusCircle;
                 death_itr[i] = 0;
-                axons_cent_pix[i] = (uint)xc * im_size + (uint)yc;
-                axon_lbl[i] = new Axon_lbl_class { lbl = "", x = xc, y = yc };
+                axons_cent_pix[i] = (uint)xCenter * im_size + (uint)yCenter;
+                axon_lbl[i] = new AxonLabelClass { lbl = "", x = xCenter, y = yCenter };
                 axons_surr_rate_idx[i + 1] = axons_surr_rate_idx[i];
 
-                float rc_1 = rc + process_clearance;
-                box_y_min[i] = Max((int)(yc - rc_1), 0);
-                box_y_max[i] = Min((int)(yc + rc_1), im_size - 1);
-                box_x_min[i] = Max((int)(xc - rc_1), 0);
-                box_x_max[i] = Min((int)(xc + rc_1), im_size - 1);
+                float rc_1 = radiusCircle + process_clearance;
+                box_y_min[i] = Max((int)(yCenter - rc_1), 0);
+                box_y_max[i] = Min((int)(yCenter + rc_1), im_size - 1);
+                box_x_min[i] = Max((int)(xCenter - rc_1), 0);
+                box_x_max[i] = Min((int)(xCenter + rc_1), im_size - 1);
                 box_siz_x[i] = box_y_max[i] - box_y_min[i] + 2;
                 box_siz_y[i] = box_x_max[i] - box_x_min[i] + 2;
             }
@@ -292,8 +293,8 @@ namespace LHON_Form
                 // Debug.WriteLine("{0} vs {1}", (Math.Pow(mdl.axon_coor[i][2] * res, 2) * Math.PI).ToString("0.0"), axons_inside_pix_idx[i + 1] - axons_inside_pix_idx[i]);
             }
 
-            gpu.Launch(grid_siz_prep, block_siz_prep).cuda_prep1(im_size, pix_out_of_nerve_dev, rate_dev);
-            gpu.CopyFromDevice(rate_dev, rate);
+            localGPUVar.Launch(grid_siz_prep, block_siz_prep).cuda_prep1(im_size, pix_out_of_nerve_dev, rate_dev);
+            localGPUVar.CopyFromDevice(rate_dev, rate);
 
             prep_prof.Time(6);
 

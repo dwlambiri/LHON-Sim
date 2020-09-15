@@ -43,7 +43,7 @@ namespace LHON_Form
             this.CenterToScreen();
             DoubleBuffered = true;
 
-            init_sweep();
+            Init_sweep();
 
             chk_show_axons.CheckedChanged += (o, e) => Update_show_opts();
             chk_show_tox.CheckedChanged += (o, e) => Update_show_opts();

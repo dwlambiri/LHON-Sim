@@ -41,14 +41,14 @@ namespace LHON_Form
 
         private sim_stat_enum sim_stat = sim_stat_enum.None;
 
-        private class Axon_lbl_class
+        private class AxonLabelClass
         {
             public string lbl;
             public float x;
             public float y;
         }
 
-        private Axon_lbl_class[] axon_lbl;
+        private AxonLabelClass[] axon_lbl;
         
         [Serializable]
         public class Setts
@@ -78,11 +78,11 @@ namespace LHON_Form
 
         // ============= Main loop vars =================
 
-        private float progress_step, next_areal_progress_snapshot, next_chron_progress_snapshot;
+        //private float progress_step, next_areal_progress_snapshot, next_chron_progress_snapshot;
         private Tictoc tt_sim = new Tictoc();
-        private float sim_time = 0;
-        private uint last_itr;
-        private float last_areal_prog;
+        //private float sim_time = 0;
+        private uint last_itr = 1;
+       // private float last_areal_prog;
 
         // =============== Profiling Class =============
 

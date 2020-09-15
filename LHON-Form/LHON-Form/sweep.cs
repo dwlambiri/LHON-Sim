@@ -22,7 +22,7 @@ namespace LHON_Form
             else Sweep();
         }
 
-        private string[] parameters_name = new string[]
+        private readonly string[] parameters_name = new string[]
         {
             "Repeat",
             "Nerve Scale",
@@ -45,7 +45,7 @@ namespace LHON_Form
             "Insult R",
         };
 
-        private void init_sweep()
+        private void Init_sweep()
         {
             foreach (var s in parameters_name)
             {
@@ -148,9 +148,12 @@ namespace LHON_Form
                         }
                         await Task.Delay(delay_ms / 5);
 
-                        if (sim_stat == sim_stat_enum.Failed) failures++;
-                        else // Successful
-                        if (chk_save_sw_prog.Checked)
+                        if (sim_stat == sim_stat_enum.Failed)
+                        {
+                            failures++;
+                        }
+                        //successful
+                        else if (chk_save_sw_prog.Checked)
                         {
                             if (dir_name == null)
                             {

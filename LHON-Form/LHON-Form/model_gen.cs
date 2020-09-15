@@ -52,13 +52,13 @@ namespace LHON_Form
                 if (axon_cdf_table_radius[x_idx] > r_mean) break;
             if (x_idx >= axon_cdf_table_num_dia) x_idx = axon_cdf_table_num_dia - 1;
 
-            float r = float.NaN;
-            while (float.IsNaN(r)) {
+            float radius = float.NaN;
+            while (float.IsNaN(radius)) {
                 y_idx = (uint)(random.NextDouble() * (double)axon_cdf_table_num_prob);
-                r = axon_cdf_table[x_idx, y_idx];
+                radius = axon_cdf_table[x_idx, y_idx];
             }
 
-            return r;
+            return radius;
         }
 
         private void Load_mdl_mean_r_table()
@@ -70,9 +70,9 @@ namespace LHON_Form
                     axon_mean_r_table_grid_siz = reader.ReadUInt32();
                     axon_mean_r_table = new float[axon_mean_r_table_grid_siz, axon_mean_r_table_grid_siz];
 
-                    for (int r = 0; r < axon_mean_r_table_grid_siz; r++)
+                    for (int radius = 0; radius < axon_mean_r_table_grid_siz; radius++)
                         for (int c = 0; c < axon_mean_r_table_grid_siz; c++)
-                            axon_mean_r_table[r, c] = reader.ReadSingle();
+                            axon_mean_r_table[radius, c] = reader.ReadSingle();
                 }
             }
             else
@@ -90,11 +90,11 @@ namespace LHON_Form
                     axon_cdf_table = new float[axon_cdf_table_num_dia, axon_cdf_table_num_prob];
                     axon_cdf_table_radius = new float[axon_cdf_table_num_dia];
 
-                    for (int r = 0; r < axon_cdf_table_num_dia; r++)
-                        axon_cdf_table_radius[r] = reader.ReadSingle();
+                    for (int radius = 0; radius < axon_cdf_table_num_dia; radius++)
+                        axon_cdf_table_radius[radius] = reader.ReadSingle();
                     for (int c = 0; c < axon_cdf_table_num_prob; c++)
-                        for (int r = 0; r < axon_cdf_table_num_dia; r++)
-                            axon_cdf_table[r, c] = reader.ReadSingle();
+                        for (int radius = 0; radius < axon_cdf_table_num_dia; radius++)
+                            axon_cdf_table[radius, c] = reader.ReadSingle();
                 }
             }
             else
@@ -159,7 +159,7 @@ namespace LHON_Form
         private bool[,] mdl_occupied_pix;
         private List<float[]> mdl_axons_coor;
         private int mdl_n_axons;
-        private Axon_lbl_class[] mdl_axon_lbl;
+        private AxonLabelClass[] mdl_axon_lbl;
 
 
         // takes Xc, Yc and Rc and updates all pixel-based params
@@ -309,7 +309,7 @@ namespace LHON_Form
             mdl.n_axons = 0;
 
             if (show_axon_order_mdl_gen)
-                mdl_axon_lbl = new Axon_lbl_class[mdl_n_axons];
+                mdl_axon_lbl = new AxonLabelClass[mdl_n_axons];
 
             int idx = 0;
             for (int i = 0; i < mdl_n_axons; i++)
@@ -322,13 +322,13 @@ namespace LHON_Form
                 mdl.axon_coor.Add(mdl_axons_coor[i]);
                 mdl.n_axons++;
 
-                int mdl_gen_im_siz = im_size = calc_im_siz();
+                int mdl_gen_im_siz = im_size = Calc_im_siz();
 
                 if (show_axon_order_mdl_gen)
                 {
                     float tempx = mdl_axons_coor[i][0] * setts.resolution + mdl_gen_im_siz / 2;
                     float tempy = mdl_axons_coor[i][1] * setts.resolution + mdl_gen_im_siz / 2;
-                    mdl_axon_lbl[idx] = new Axon_lbl_class { lbl = (i + 1).ToString("0"), x = tempx, y = tempy };
+                    mdl_axon_lbl[idx] = new AxonLabelClass { lbl = (i + 1).ToString("0"), x = tempx, y = tempy };
                     idx++;
                 }
             }

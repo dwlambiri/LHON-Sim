@@ -102,8 +102,8 @@ namespace LHON_Form
             float picW = picB.Size.Width;
             float picH = picB.Size.Height;
 
-            float asp_im = (float)im_size / (float)im_size,
-                asp_box = picW / picH;
+            float asp_im = (float)im_size / (float)im_size;
+            float asp_box = picW / picH;
 
             if (asp_im > asp_box)
             {
@@ -161,6 +161,7 @@ namespace LHON_Form
 
             if (show_axon_order_mdl_gen)
             {
+                // comment
                 if (mdl_axon_lbl != null && mdl_axon_lbl.Length > 0)
                     for (int i = 0; i < mdl_n_axons; i++)
                     {
