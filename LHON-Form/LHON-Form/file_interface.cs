@@ -1,27 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Diagnostics;
-using System.Drawing;
-using System.Drawing.Imaging;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using AviFile;
-using System.Drawing.Drawing2D;
-using System.Xml.Serialization;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 
 using Cudafy;
 using Cudafy.Host;
-using Cudafy.Atomics;
-using Cudafy.Translator;
-using System.Runtime.InteropServices;
-using MathNet.Numerics.Distributions;
 
 
 namespace LHON_Form
@@ -68,7 +51,7 @@ namespace LHON_Form
             }
         }
 
-        void Save_SIM_Table_CSV(string progression_fil_name)
+        private void Save_SIM_Table_CSV(string progression_fil_name)
         {
             float small_medium_thrs_r = 0.342F;
             float medium_large_thrs_r = 0.487F;
@@ -160,7 +143,7 @@ namespace LHON_Form
             }
 
 
-            append_stat_ln("Model exported to " + path);
+            Append_stat_ln("Model exported to " + path);
             path = ProjectOutputDir + @"Exported\" + timeStr + ".txt";
             using (StreamWriter file = new StreamWriter(path, true))
             {
@@ -213,7 +196,7 @@ namespace LHON_Form
 
                     writer.Flush();
 
-                    append_stat_ln("Sim Progress saved to " + progression_fil_name);
+                    Append_stat_ln("Sim Progress saved to " + progression_fil_name);
                 }
             }
 
@@ -241,7 +224,7 @@ namespace LHON_Form
 
         // ====================== Matlab Interface
 
-        void Export_model() // no death info, text file
+        private void Export_model() // no death info, text file
         {
             string path = ProjectOutputDir + @"Exported\" + DateTime.Now.ToString("yyyy - MM - dd @HH - mm - ss") + ".txt";
             using (StreamWriter file = new StreamWriter(path, true))
@@ -250,7 +233,7 @@ namespace LHON_Form
                 for (int i = 0; i < mdl.n_axons; i++)
                     file.WriteLine("{0}, {1}, {2}", mdl.axon_coor[i][0], mdl.axon_coor[i][1], mdl.axon_coor[i][2]);
             }
-            append_stat_ln("Model exported to " + path);
+            Append_stat_ln("Model exported to " + path);
         }
 
     }

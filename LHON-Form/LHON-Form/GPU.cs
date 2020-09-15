@@ -1,36 +1,21 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Diagnostics;
-using System.Drawing;
-using System.Drawing.Imaging;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using AviFile;
-using System.Drawing.Drawing2D;
-using System.Xml.Serialization;
-using System.IO;
 
 using Cudafy;
 using Cudafy.Host;
-using Cudafy.Atomics;
 using Cudafy.Translator;
-using System.Runtime.InteropServices;
 
 namespace LHON_Form
 {
     public partial class Main_Form : Form
     {
-        volatile GPGPU gpu;
-        bool recompile_cuda = true;
+        private volatile GPGPU gpu;
+        private readonly bool recompile_cuda = true;
 
-        const int max_resident_blocks = 16;
-        const int max_resident_threads = 2048;
-        const int warp_size = 32;
+       // const int max_resident_blocks = 16;
+       // const int max_resident_threads = 2048;
+       // const int warp_size = 32;
 
         public bool Init_gpu()
         {
@@ -49,11 +34,12 @@ namespace LHON_Form
             //    return true;
             //}
 
-            append_stat_ln("Running on " + gpu_name);
+            Append_stat_ln("Running on " + gpu_name);
 
             CudafyModule km = CudafyModule.TryDeserialize();
             if (recompile_cuda && (km == null || !km.TryVerifyChecksums()))
             {
+                // eArchitecture arch = gpu.GetArchitecture();
                 km = CudafyTranslator.Cudafy(arch: eArchitecture.sm_50);
                 km.TrySerialize();
             }
@@ -66,38 +52,38 @@ namespace LHON_Form
         //                 Copy from GPU to CPU and vice-versa 
         // ==================================================================
 
-        dim3 blocks_per_grid_2D_pix;
-        int blocks_per_grid_1D_axons;
+        private dim3 blocks_per_grid_2D_pix;
+        private int blocks_per_grid_1D_axons;
 
-        private void load_gpu_from_cpu()
+        private void Load_gpu_from_cpu()
         {
-            GPGPU gpu = CudafyHost.GetDevice(CudafyModes.Target, CudafyModes.DeviceId);
+            GPGPU gpuLocal = CudafyHost.GetDevice(CudafyModes.Target, CudafyModes.DeviceId);
 
-            gpu.FreeAll(); gpu.Synchronize();
+            gpuLocal.FreeAll(); gpuLocal.Synchronize();
 
-            tox_dev = gpu.Allocate<float>(2*im_size*im_size); gpu.Set(tox_dev); gpu.CopyToDevice(tox, 0, tox_dev, 0, tox.Length);
-            tox_new_dev = gpu.Allocate<float>(im_size * im_size); gpu.Set(tox_new_dev);
+            tox_dev = gpuLocal.Allocate<float>(2*im_size*im_size); gpuLocal.Set(tox_dev); gpuLocal.CopyToDevice(tox, 0, tox_dev, 0, tox.Length);
+            tox_new_dev = gpuLocal.Allocate<float>(im_size * im_size); gpuLocal.Set(tox_new_dev);
 
-            rate_dev = gpu.Allocate(rate); gpu.CopyToDevice(rate, rate_dev);
-            detox_dev = gpu.Allocate(detox); gpu.CopyToDevice(detox, detox_dev);
-            tox_prod_dev = gpu.Allocate(tox_prod); gpu.CopyToDevice(tox_prod, tox_prod_dev);
+            rate_dev = gpuLocal.Allocate(rate); gpuLocal.CopyToDevice(rate, rate_dev);
+            detox_dev = gpuLocal.Allocate(detox); gpuLocal.CopyToDevice(detox, detox_dev);
+            tox_prod_dev = gpuLocal.Allocate(tox_prod); gpuLocal.CopyToDevice(tox_prod, tox_prod_dev);
 
-            axons_cent_pix_dev = gpu.Allocate(axons_cent_pix); gpu.CopyToDevice(axons_cent_pix, axons_cent_pix_dev);
-            axon_is_alive_dev = gpu.Allocate(axon_is_alive); gpu.CopyToDevice(axon_is_alive, axon_is_alive_dev);
+            axons_cent_pix_dev = gpuLocal.Allocate(axons_cent_pix); gpuLocal.CopyToDevice(axons_cent_pix, axons_cent_pix_dev);
+            axon_is_alive_dev = gpuLocal.Allocate(axon_is_alive); gpuLocal.CopyToDevice(axon_is_alive, axon_is_alive_dev);
 
-            pix_idx_dev = gpu.Allocate(pix_idx); gpu.CopyToDevice(pix_idx, pix_idx_dev);
+            pix_idx_dev = gpuLocal.Allocate(pix_idx); gpuLocal.CopyToDevice(pix_idx, pix_idx_dev);
 
-            num_alive_axons_dev = gpu.Allocate<int>(1); gpu.CopyToDevice(num_alive_axons, num_alive_axons_dev);
-            death_itr_dev = gpu.Allocate(death_itr); gpu.CopyToDevice(death_itr, death_itr_dev);
-            bmp_bytes_dev = gpu.Allocate(bmp_bytes); gpu.CopyToDevice(bmp_bytes, bmp_bytes_dev);
-            init_insult_mask_dev = gpu.Allocate<byte>(bmp_im_size, bmp_im_size);
+            num_alive_axons_dev = gpuLocal.Allocate<int>(1); gpuLocal.CopyToDevice(num_alive_axons, num_alive_axons_dev);
+            death_itr_dev = gpuLocal.Allocate(death_itr); gpuLocal.CopyToDevice(death_itr, death_itr_dev);
+            bmp_bytes_dev = gpuLocal.Allocate(bmp_bytes); gpuLocal.CopyToDevice(bmp_bytes, bmp_bytes_dev);
+            init_insult_mask_dev = gpuLocal.Allocate<byte>(bmp_im_size, bmp_im_size);
 
-            sum_tox_dev = gpu.Allocate<float>(1);
-            progress_dev = gpu.Allocate<float>(3);
+            sum_tox_dev = gpuLocal.Allocate<float>(1);
+            progress_dev = gpuLocal.Allocate<float>(3);
 
-            progression_image_sum_float_dev = gpu.Allocate<float>(prog_im_siz, prog_im_siz);
-            progress_image_num_averaged_pix_dev = gpu.Allocate<uint>(prog_im_siz, prog_im_siz);
-            progression_image_dev = gpu.Allocate<byte>(prog_im_siz, prog_im_siz);
+            progression_image_sum_float_dev = gpuLocal.Allocate<float>(prog_im_siz, prog_im_siz);
+            progress_image_num_averaged_pix_dev = gpuLocal.Allocate<uint>(prog_im_siz, prog_im_siz);
+            progression_image_dev = gpuLocal.Allocate<byte>(prog_im_siz, prog_im_siz);
 
             // ==================== Constants
 
@@ -105,19 +91,19 @@ namespace LHON_Form
             blocks_per_grid_2D_pix = new dim3(tmp, tmp);
             blocks_per_grid_1D_axons = mdl.n_axons / threads_per_block_1D + 1;
 
-            show_opts_dev = gpu.Allocate(show_opts); gpu.CopyToDevice(show_opts, show_opts_dev);
+            show_opts_dev = gpuLocal.Allocate(show_opts); gpuLocal.CopyToDevice(show_opts, show_opts_dev);
             
-            axons_inside_pix_dev = gpu.Allocate(axons_inside_pix); gpu.CopyToDevice(axons_inside_pix, axons_inside_pix_dev);
-            axons_inside_pix_idx_dev = gpu.Allocate(axons_inside_pix_idx); gpu.CopyToDevice(axons_inside_pix_idx, axons_inside_pix_idx_dev);
+            axons_inside_pix_dev = gpuLocal.Allocate(axons_inside_pix); gpuLocal.CopyToDevice(axons_inside_pix, axons_inside_pix_dev);
+            axons_inside_pix_idx_dev = gpuLocal.Allocate(axons_inside_pix_idx); gpuLocal.CopyToDevice(axons_inside_pix_idx, axons_inside_pix_idx_dev);
 
-            axon_surr_rate_dev = gpu.Allocate(axons_surr_rate); gpu.CopyToDevice(axons_surr_rate, axon_surr_rate_dev);
-            axon_surr_rate_idx_dev = gpu.Allocate(axons_surr_rate_idx); gpu.CopyToDevice(axons_surr_rate_idx, axon_surr_rate_idx_dev);
+            axon_surr_rate_dev = gpuLocal.Allocate(axons_surr_rate); gpuLocal.CopyToDevice(axons_surr_rate, axon_surr_rate_dev);
+            axon_surr_rate_idx_dev = gpuLocal.Allocate(axons_surr_rate_idx); gpuLocal.CopyToDevice(axons_surr_rate_idx, axon_surr_rate_idx_dev);
 
-            axon_mask_dev = gpu.Allocate(axon_mask); gpu.CopyToDevice(axon_mask, axon_mask_dev);
+            axon_mask_dev = gpuLocal.Allocate(axon_mask); gpuLocal.CopyToDevice(axon_mask, axon_mask_dev);
 
-            gpu.Synchronize();
+            gpuLocal.Synchronize();
 
-            Debug.WriteLine("GPU used memory: " + (100.0 * (1 - (double)gpu.FreeMemory / (double)gpu.TotalMemory)).ToString("0.0") + " %\n");
+            Debug.WriteLine("GPU used memory: " + (100.0 * (1 - (double)gpuLocal.FreeMemory / (double)gpuLocal.TotalMemory)).ToString("0.0") + " %\n");
         }
         /*
         private void load_cpu_from_gpu()
@@ -144,6 +130,8 @@ namespace LHON_Form
         public static void cuda_diffusion1() { }
         [CudafyDummy]
         public static void cuda_diffusion2() { }
+        [CudafyDummy]
+        public static void cuda_diffusion3() { }
         [CudafyDummy]
         public static void cuda_update_image() { }
         [CudafyDummy]

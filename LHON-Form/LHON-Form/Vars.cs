@@ -9,55 +9,46 @@ namespace LHON_Form
 {
     public partial class Main_Form : Form
     {
-        const string ProjectOutputDir = @"..\..\Project_Output\";
-
-        ushort threads_per_block_1D = 1024;
+        private const string ProjectOutputDir = @"..\..\Project_Output\";
+        private ushort threads_per_block_1D = 1024;
         
         // ======================================================
 
         private BackgroundWorker alg_worker = new BackgroundWorker(), new_model_worker = new BackgroundWorker();
-        AviManager aviManager;
-        string avi_file;
-        VideoStream aviStream;
-        
-        float sum_tox, areal_progress, chron_progress;
-        float[] progress_dat = new float[3];
-
-        const int progress_num_frames = 20;
-        double resolution_reduction_ratio;
-        ushort prog_im_siz, prog_im_siz_default = 100;
-
-        byte[,] progression_image_dev;
-
-        byte[,,] areal_progression_image_stack, chron_progression_image_stack;
-        float[] areal_progress_chron_val, chron_progress_areal_val;
-        uint areal_progression_image_stack_cnt, chron_progression_image_stack_cnt;
-        float[,] progression_image_sum_float_dev;
-        uint[,] progress_image_num_averaged_pix_dev;
-
-        float areal_progress_lim;
-
-        bool stop_sweep_req = false, sweep_is_running = false;
-
-        float[] sum_tox_dev, progress_dev;
-
-        uint iteration = 0;
-
-        float time;
+        private AviManager aviManager;
+        private string avi_file;
+        private VideoStream aviStream;
+        private float sum_tox, areal_progress, chron_progress;
+        private float[] progress_dat = new float[3];
+        private const int progress_num_frames = 20;
+        private double resolution_reduction_ratio;
+        private ushort prog_im_siz, prog_im_siz_default = 100;
+        private byte[,] progression_image_dev;
+        private byte[,,] areal_progression_image_stack, chron_progression_image_stack;
+        private float[] areal_progress_chron_val, chron_progress_areal_val;
+        private uint areal_progression_image_stack_cnt, chron_progression_image_stack_cnt;
+        private float[,] progression_image_sum_float_dev;
+        private uint[,] progress_image_num_averaged_pix_dev;
+        private float areal_progress_lim;
+        private bool stop_sweep_req = false, sweep_is_running = false;
+        private float[] sum_tox_dev, progress_dev;
+        private uint iteration = 0;
+        private float time;
 
         // float[] init_insult = new float[2] { 0, 0 };
-        
-        enum sim_stat_enum { None, Running, Paused, Successful, Failed };
-        sim_stat_enum sim_stat = sim_stat_enum.None;
 
-        private class axon_lbl_class
+        private enum sim_stat_enum { None, Running, Paused, Successful, Failed };
+
+        private sim_stat_enum sim_stat = sim_stat_enum.None;
+
+        private class Axon_lbl_class
         {
             public string lbl;
             public float x;
             public float y;
         }
 
-        axon_lbl_class[] axon_lbl;
+        private Axon_lbl_class[] axon_lbl;
         
         [Serializable]
         public class Setts
@@ -82,28 +73,27 @@ namespace LHON_Form
             public float insult_tox;
         }
 
-        Model mdl = new Model();
-
-        Setts setts = new Setts();
+        private Model mdl = new Model();
+        private Setts setts = new Setts();
 
         // ============= Main loop vars =================
 
-        float progress_step, next_areal_progress_snapshot, next_chron_progress_snapshot;
-        tic_toc tt_sim = new tic_toc();
-        float sim_time = 0;
-        uint last_itr;
-        float last_areal_prog;
+        private float progress_step, next_areal_progress_snapshot, next_chron_progress_snapshot;
+        private Tictoc tt_sim = new Tictoc();
+        private float sim_time = 0;
+        private uint last_itr;
+        private float last_areal_prog;
 
         // =============== Profiling Class =============
 
-        class profile_class
+        private class Profiler
         {
-            const int max = 100;
-            double[] T = new double[max];
-            int[] num_occur = new int[max];
-            Stopwatch sw = Stopwatch.StartNew();
-            Stopwatch sw_tot = Stopwatch.StartNew();
-            public void time(int idx) // Pass 0 start of main program to start tot_time
+            private const int max = 100;
+            private double[] T = new double[max];
+            private int[] num_occur = new int[max];
+            private Stopwatch sw = Stopwatch.StartNew();
+            private Stopwatch sw_tot = Stopwatch.StartNew();
+            public void Time(int idx) // Pass 0 start of main program to start tot_time
             {
                 if (idx > 0)
                 {
@@ -129,14 +119,16 @@ namespace LHON_Form
                         Debug.WriteLine("{0}:\t{1}%\t{2}ms\t{3}K >> {4}ms", k, (T[k] / tot_time * 100).ToString("00.0"), T[k].ToString("000000"), (num_occur[k] / 1000).ToString("0000"), (T[k] / num_occur[k]).ToString("000.000"));
             }
         }
-        profile_class gpu_prof = new profile_class(), alg_prof = new profile_class(), prep_prof = new profile_class();
 
+        private Profiler gpu_prof = new Profiler();
+        private Profiler alg_prof = new Profiler();
+        private Profiler prep_prof = new Profiler();
 
 
         // ======= Basic Math Functions =========
 
-        private float pow2(float x){return x * x;}
-        private int pow2(int x) { return x * x; }
+        private float Pow2(float x){return x * x;}
+        private int Pow2(int x) { return x * x; }
 
         private float Maxf(float v1, float v2)
         {
@@ -158,7 +150,7 @@ namespace LHON_Form
             return (v1 < v2) ? v1 : v2;
         }
 
-        private float within_circle2(int x, int y, float xc, float yc, float rc)
+        private float Within_circle2(int x, int y, float xc, float yc, float rc)
         {
             float dx = (float)x - xc;
             float dy = (float)y - yc;
@@ -167,41 +159,42 @@ namespace LHON_Form
 
         // ========== tic toc ==========
 
-        Stopwatch sw = new Stopwatch();
-        void tic()
+        private Stopwatch sw = new Stopwatch();
+
+        private void Tic()
         {
             sw = Stopwatch.StartNew();
         }
 
-        float toc()
+        private float Toc()
         {
             float t = sw.ElapsedMilliseconds;
-            tic();
+            Tic();
             return t;
         }
 
-        class tic_toc
+        private class Tictoc
         {
-            Stopwatch sw = new Stopwatch();
-            public void restart()
+            private Stopwatch sw = new Stopwatch();
+            public void Restart()
             {
                 sw = Stopwatch.StartNew();
             }
-            public float read()
+            public float Read()
             {
                 return sw.ElapsedMilliseconds;
             }
-            public void pause()
+            public void Pause()
             {
                 sw.Stop();
             }
-            public void start()
+            public void Start()
             {
                 sw.Start();
             }
         }
 
-        const string CharList = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        private const string CharList = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
         public static string Dec2B36(long value)
         {

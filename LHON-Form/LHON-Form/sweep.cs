@@ -1,25 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Diagnostics;
-using System.Drawing;
-using System.Drawing.Imaging;
-using System.Linq;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using AviFile;
-using System.Drawing.Drawing2D;
-using System.Xml.Serialization;
 using System.IO;
-
-using Cudafy;
-using Cudafy.Host;
-using Cudafy.Atomics;
-using Cudafy.Translator;
-using System.Runtime.InteropServices;
 
 namespace LHON_Form
 {
@@ -27,20 +9,20 @@ namespace LHON_Form
     {
         // =======================================
 
-        private void btn_sweep_Click(object sender, EventArgs e)
+        private void Btn_sweep_Click(object sender, EventArgs e)
         {
 
             if (sweep_is_running)
             {
                 stop_sweep_req = true;
-                stop_sim(sim_stat_enum.Paused);
+                Stop_sim(sim_stat_enum.Paused);
                 btn_sweep.Text = "S&weep";
-                append_stat_ln("Sweeping Terminated by User!");
+                Append_stat_ln("Sweeping Terminated by User!");
             }
-            else sweep();
+            else Sweep();
         }
 
-        string[] parameters_name = new string[]
+        private string[] parameters_name = new string[]
         {
             "Repeat",
             "Nerve Scale",
@@ -63,8 +45,7 @@ namespace LHON_Form
             "Insult R",
         };
 
-
-        void init_sweep()
+        private void init_sweep()
         {
             foreach (var s in parameters_name)
             {
@@ -73,7 +54,7 @@ namespace LHON_Form
             }
         }
 
-        async void sweep()
+        private async void Sweep()
         {
             if (sim_stat == sim_stat_enum.Running) return;
 
@@ -127,9 +108,9 @@ namespace LHON_Form
 
                 for (int i1 = 0; i1 < sweep_repetitions1; i1++)
                 {
-                    float val1 = sweep_upd_param(selection1, start1, end1, i1, sweep_repetitions1);
+                    float val1 = Sweep_upd_param(selection1, start1, end1, i1, sweep_repetitions1);
                     float val2 = 0;
-                    append_stat_ln(parameter_name1 + " : " + val1.ToString());
+                    Append_stat_ln(parameter_name1 + " : " + val1.ToString());
 
                     bool sel1_regenerate_model = selection1 < 2;
                     bool sel2_regenerate_model = selection2 < 2;
@@ -138,10 +119,10 @@ namespace LHON_Form
                     {
                         if (sweep_repetitions2 > 0)
                         {
-                            val2 = sweep_upd_param(selection2, start2, end2, i2, sweep_repetitions2);
-                            append_stat_ln(parameter_name2 + " : " + val2.ToString());
+                            val2 = Sweep_upd_param(selection2, start2, end2, i2, sweep_repetitions2);
+                            Append_stat_ln(parameter_name2 + " : " + val2.ToString());
                         }
-                        update_mdl_and_setts_ui();
+                        Update_mdl_and_setts_ui();
 
                         if (sel1_regenerate_model || (sweep_repetitions2 > 0 && sel2_regenerate_model))
                         {
@@ -156,9 +137,9 @@ namespace LHON_Form
                             }
                         }
                         else
-                            preprocess_model();
+                            Preprocess_model();
 
-                        start_sim();
+                        Start_sim();
                         //Debug.WriteLine("simulation should've been started" + sim_stat);
                         while (sim_stat != sim_stat_enum.Successful && sim_stat != sim_stat_enum.Failed)
                         {
@@ -196,7 +177,7 @@ namespace LHON_Form
                     while (i2 < sweep_repetitions2);
                 }
 
-                append_stat_ln(string.Format("Sweeping finished after {0} repetitions and {1} failure(s).", (sweep_repetitions2 > 0 ? sweep_repetitions2 * sweep_repetitions1 : sweep_repetitions1).ToString(), failures > 0 ? failures.ToString() : "no"));
+                Append_stat_ln(string.Format("Sweeping finished after {0} repetitions and {1} failure(s).", (sweep_repetitions2 > 0 ? sweep_repetitions2 * sweep_repetitions1 : sweep_repetitions1).ToString(), failures > 0 ? failures.ToString() : "no"));
                 sweep_is_running = false;
                 btn_sweep.Text = "S&weep";
             }
@@ -206,7 +187,7 @@ namespace LHON_Form
             }
         }
 
-        float sweep_upd_param(int selection, float start, float end, int i, int sweep_repetitions)
+        private float Sweep_upd_param(int selection, float start, float end, int i, int sweep_repetitions)
         {
             float sig = end < start ? -1 : 1;
             float step_siz;

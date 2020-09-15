@@ -144,8 +144,8 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
-    <None Include="Cuda\cuda_diffusion1.cu" />
     <None Include="Cuda\cuda_diffusion2.cu" />
+    <None Include="Cuda\cuda_diffusion3.cu" />
     <None Include="Cuda\cuda_prep0.cu" />
     <None Include="Cuda\cuda_prep1.cu" />
     <None Include="Cuda\cuda_tox_sum.cu" />

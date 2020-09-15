@@ -13,9 +13,8 @@ namespace LHON_Form
         //      Constants
         // ========================
 
-        float min_res = 10F;
-
-        int process_clearance = 2;
+        private readonly float min_res = 10F;
+        private int process_clearance = 2;
 
         // ========================
         //      Parameters
@@ -31,7 +30,7 @@ namespace LHON_Form
             micromol / um^2 = (CONSTANT * resolution ^ 2) * tox / pix
         */
 
-        float k_detox_intra, k_detox_extra, k_tox_prod, death_tox_thres, insult_tox, on_death_tox,
+        private float k_detox_intra, k_detox_extra, k_tox_prod, death_tox_thres, insult_tox, on_death_tox,
             k_rate_live_axon, k_rate_boundary, k_rate_dead_axon, k_rate_extra;
 
 
@@ -39,41 +38,39 @@ namespace LHON_Form
         //              Variables
         // ====================================
 
-        float[] tox, tox_init, tox_dev, tox_new_dev; // Tox
-        float[] rate, rate_init, rate_dev; // Rate
-        float[] detox, detox_init, detox_dev; // Detox
-        float[] tox_prod, tox_prod_init, tox_prod_dev; // Tox_prod
-        uint[] axons_cent_pix, axons_cent_pix_dev; // Center pixel of each axon
-        uint[] axons_inside_pix, axons_inside_pix_dev; // 1D array for all axons
-        uint[] axons_inside_pix_idx, axons_inside_pix_idx_dev; // indices for the above 1D array
-        uint[] axons_surr_rate, axon_surr_rate_dev; // 1D indices of rate array that have the boundary rate and are outside axons
-        uint[] axons_surr_rate_idx, axon_surr_rate_idx_dev; // indices for above array
-        uint[] death_itr, death_itr_dev; // death iteration of each axon
-        byte[] axon_mask, axon_mask_init, axon_mask_dev;
+        private float[] tox, tox_init, tox_dev, tox_new_dev; // Tox
+        private float[] rate, rate_init, rate_dev; // Rate
+        private float[] detox, detox_init, detox_dev; // Detox
+        private float[] tox_prod, tox_prod_init, tox_prod_dev; // Tox_prod
+        private uint[] axons_cent_pix, axons_cent_pix_dev; // Center pixel of each axon
+        private uint[] axons_inside_pix, axons_inside_pix_dev; // 1D array for all axons
+        private uint[] axons_inside_pix_idx, axons_inside_pix_idx_dev; // indices for the above 1D array
+        private uint[] axons_surr_rate, axon_surr_rate_dev; // 1D indices of rate array that have the boundary rate and are outside axons
+        private uint[] axons_surr_rate_idx, axon_surr_rate_idx_dev; // indices for above array
+        private uint[] death_itr, death_itr_dev; // death iteration of each axon
+        private byte[] axon_mask, axon_mask_init, axon_mask_dev;
 
         // Index of pixels inside the nerve (used for cuda functions)
-        int[] pix_idx, pix_idx_dev;
-        int pix_idx_num; // number of pixels inside the nerve
+        private int[] pix_idx, pix_idx_dev;
+        private int pix_idx_num; // number of pixels inside the nerve
 
-        bool[] axon_is_alive, axon_is_alive_init, axon_is_alive_dev;
-        int[] num_alive_axons = new int[1], num_alive_axons_dev;
+        private bool[] axon_is_alive, axon_is_alive_init, axon_is_alive_dev;
+        private int[] num_alive_axons = new int[1], num_alive_axons_dev;
+        private bool[] axon_is_init_insult;
+        private bool[] axon_is_large; // For display purposes
 
-        bool[] axon_is_init_insult;
-
-        bool[] axon_is_large; // For display purposes
-
-        ushort im_size;
+        private ushort im_size;
 
         // ====================================
         //        Model Preprocessing
         // ====================================
-        ushort calc_im_siz()
+        private ushort calc_im_siz()
         {
             return (ushort)((mdl_nerve_r * setts.resolution + 2) * 2);
         }
 
         // Requires full Model info and assigns tox, rate, etc
-        private void preprocess_model()
+        private void Preprocess_model()
         {
             
 
@@ -85,14 +82,14 @@ namespace LHON_Form
             float res = setts.resolution;
             mdl_nerve_r = mdl.nerve_scale_ratio * mdl_real_nerve_r;
 
-            float rate_conv = pow2(res / min_res);
+            float rate_conv = Pow2(res / min_res);
             float temp = 1F / rate_conv;
             if (setts.rate_live > temp ||
                 setts.rate_bound > temp ||
                 setts.rate_dead > temp ||
                 setts.rate_extra > temp)
             {
-                append_stat_ln("Bad diffusion rate (>0.2)! Increase min_res. Preprocess aborted.");
+                Append_stat_ln("Bad diffusion rate (>0.2)! Increase min_res. Preprocess aborted.");
                 return;
             }
 
@@ -114,15 +111,15 @@ namespace LHON_Form
             insult_tox = setts.insult_tox;
             on_death_tox = setts.on_death_tox;
 
-            prep_prof.time(0);
-            tic();
+            prep_prof.Time(0);
+            Tic();
 
-            update_bottom_stat("Preprocessing ...");
+            Update_bottom_stat("Preprocessing ...");
 
             im_size = calc_im_siz();
-            update_image_siz_lbl();
+            Update_image_siz_lbl();
 
-            init_bmp_write();
+            Init_bmp_write();
 
             // ======== Pixel Properties =========
             rate = rate_init = new float[im_size * im_size * 4];
@@ -139,7 +136,7 @@ namespace LHON_Form
             axon_is_alive = axon_is_alive_init = Enumerable.Repeat(true, mdl.n_axons).ToArray(); // init to true
 
             // temp variable
-            int max_pixels_in_nerve = (int)(pow2(mdl_nerve_r * res) * (1 - pow2(mdl_vessel_ratio)) * Math.PI);
+            int max_pixels_in_nerve = (int)(Pow2(mdl_nerve_r * res) * (1 - Pow2(mdl_vessel_ratio)) * Math.PI);
 
             axons_inside_pix = new uint[max_pixels_in_nerve * 3 / 4];
             axons_inside_pix_idx = new uint[mdl.n_axons + 1];
@@ -153,15 +150,15 @@ namespace LHON_Form
 
             death_itr = new uint[mdl.n_axons];
 
-            axon_lbl = new axon_lbl_class[mdl.n_axons]; // for GUI
+            axon_lbl = new Axon_lbl_class[mdl.n_axons]; // for GUI
 
             // ======== Local Constants =========
             int nerve_cent_pix = im_size / 2;
             int nerve_r_pix = (int)(mdl_nerve_r * res);
             int vein_r_pix = (int)(mdl_vessel_ratio * mdl_nerve_r * res);
 
-            int nerve_r_pix_2 = pow2(nerve_r_pix);
-            int vein_r_pix_2 = pow2(vein_r_pix);
+            int nerve_r_pix_2 = Pow2(nerve_r_pix);
+            int vein_r_pix_2 = Pow2(vein_r_pix);
 
             // GPU init for prep0 and prep1
             GPGPU gpu = CudafyHost.GetDevice(CudafyModes.Target, CudafyModes.DeviceId);
@@ -188,13 +185,13 @@ namespace LHON_Form
             gpu.CopyFromDevice(rate_dev, rate);
             gpu.CopyFromDevice(detox_dev, detox);
 
-            prep_prof.time(1);
+            prep_prof.Time(1);
 
             for (int idx = 0; idx < im_size * im_size; idx++)
                 if (pix_out_of_nerve[idx] == 0)
                     pix_idx[pix_idx_num++] = idx;
 
-            prep_prof.time(2);
+            prep_prof.Time(2);
 
             float[,] AxCorPix = new float[mdl.n_axons, 3]; // axon coordinate in pixels
 
@@ -214,7 +211,7 @@ namespace LHON_Form
             {
                 axon_is_large[i] = mdl.axon_coor[i][2] > axon_max_r_mean;
 
-                axon_is_init_insult[i] = pow2(insult_r - mdl.axon_coor[i][2]) > pow2(insult_x - mdl.axon_coor[i][0]) + pow2(insult_y - mdl.axon_coor[i][1]);
+                axon_is_init_insult[i] = Pow2(insult_r - mdl.axon_coor[i][2]) > Pow2(insult_x - mdl.axon_coor[i][0]) + Pow2(insult_y - mdl.axon_coor[i][1]);
 
                 // Change coordinates from um to pixels
                 float xc = nerve_cent_pix + mdl.axon_coor[i][0] * res;
@@ -223,7 +220,7 @@ namespace LHON_Form
                 AxCorPix[i, 0] = xc; AxCorPix[i, 1] = yc; AxCorPix[i, 2] = rc;
                 death_itr[i] = 0;
                 axons_cent_pix[i] = (uint)xc * im_size + (uint)yc;
-                axon_lbl[i] = new axon_lbl_class { lbl = "", x = xc, y = yc };
+                axon_lbl[i] = new Axon_lbl_class { lbl = "", x = xc, y = yc };
                 axons_surr_rate_idx[i + 1] = axons_surr_rate_idx[i];
 
                 float rc_1 = rc + process_clearance;
@@ -234,7 +231,7 @@ namespace LHON_Form
                 box_siz_x[i] = box_y_max[i] - box_y_min[i] + 2;
                 box_siz_y[i] = box_x_max[i] - box_x_min[i] + 2;
             }
-            prep_prof.time(3);
+            prep_prof.Time(3);
 
             for (int i = 0; i < mdl.n_axons; i++)
             {
@@ -259,7 +256,7 @@ namespace LHON_Form
                                 tox[lin_idx] = insult_tox;
                         }
                     }
-                prep_prof.time(4);
+                prep_prof.Time(4);
 
                 int cnt1 = 0, cnt2 = 0;
 
@@ -290,7 +287,7 @@ namespace LHON_Form
                     }
                 if (cnt1 / 2 != cnt2)
                     Debug.WriteLine("Increase clearance");
-                prep_prof.time(5);
+                prep_prof.Time(5);
                 // Verify radius
                 // Debug.WriteLine("{0} vs {1}", (Math.Pow(mdl.axon_coor[i][2] * res, 2) * Math.PI).ToString("0.0"), axons_inside_pix_idx[i + 1] - axons_inside_pix_idx[i]);
             }
@@ -298,7 +295,7 @@ namespace LHON_Form
             gpu.Launch(grid_siz_prep, block_siz_prep).cuda_prep1(im_size, pix_out_of_nerve_dev, rate_dev);
             gpu.CopyFromDevice(rate_dev, rate);
 
-            prep_prof.time(6);
+            prep_prof.Time(6);
 
             // Keep backup of inital state 
 
@@ -309,12 +306,12 @@ namespace LHON_Form
             //axon_mask_init = null; axon_mask_init = (byte[,])axon_mask.Clone();
             //axon_is_alive_init = null; axon_is_alive_init = (bool[])axon_is_alive.Clone();
 
-            reset_state();
+            Reset_state();
 
             // variable size study
             //((rate.Length + tox.Length + detox.Length + tox_prod.Length + axon_mask.Length + axon_is_alive.Length)*4)/1024/1024 // MB
 
-            update_bottom_stat("Preprocess Done! (" + (toc() / 1000).ToString("0.0") + " secs)");
+            Update_bottom_stat("Preprocess Done! (" + (Toc() / 1000).ToString("0.0") + " secs)");
             // Debug.WriteLine("inside: {0} vs allocated {1}", axons_inside_pix_idx[mdl.n_axons - 1], axons_inside_pix.Length);
 
             prep_prof.report();
