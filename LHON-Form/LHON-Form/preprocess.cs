@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 using Cudafy;
 using Cudafy.Host;
+using MathNet.Numerics.LinearAlgebra.Solvers;
 
 namespace LHON_Form
 {
@@ -47,6 +48,7 @@ namespace LHON_Form
         private uint[] axons_inside_pix_idx, axons_inside_pix_idx_dev; // indices for the above 1D array
         private uint[] axons_surr_rate, axon_surr_rate_dev; // 1D indices of rate array that have the boundary rate and are outside axons
         private uint[] axons_surr_rate_idx, axon_surr_rate_idx_dev; // indices for above array
+        private uint[] id_center_axon, id_center_axon_dev; //axon id for center pixels; rest are zeros
         private uint[] death_itr, death_itr_dev; // death iteration of each axon
         private byte[] axon_mask, axon_mask_init, axon_mask_dev;
 
@@ -89,9 +91,18 @@ namespace LHON_Form
                 setts.rate_dead > temp ||
                 setts.rate_extra > temp)
             {
-                Append_stat_ln("Bad diffusion rate (>0.2)! Increase min_res. Preprocess aborted.");
+                Append_stat_ln("Error: Diffusion param greater than " + temp.ToString() + ". Preprocessing aborted.");
                 return;
             }
+
+            if (setts.detox_intra > 1F ||
+                setts.detox_extra> 1F)
+            {
+                Append_stat_ln("Error: Detox param greater than 1. Preprocessing aborted.");
+                return;
+            }
+
+
 
             // "setts" are user input with physical units
 
@@ -100,11 +111,13 @@ namespace LHON_Form
             k_detox_extra = 1F - setts.detox_extra;
             k_tox_prod = setts.tox_prod;
 
+            float fiveF = 5F;
+
             // User inputs 0 to 1 for rate values 
-            k_rate_live_axon = setts.rate_live / 5F * rate_conv;
-            k_rate_boundary = setts.rate_bound / 5F * rate_conv;
-            k_rate_dead_axon = setts.rate_dead / 5F * rate_conv;
-            k_rate_extra = setts.rate_extra / 5F * rate_conv;
+            k_rate_live_axon = setts.rate_live / fiveF * rate_conv;
+            k_rate_boundary = setts.rate_bound / fiveF * rate_conv;
+            k_rate_dead_axon = setts.rate_dead / fiveF * rate_conv;
+            k_rate_extra = setts.rate_extra / fiveF * rate_conv;
 
             // 
             death_tox_thres = setts.death_tox_thres;
@@ -126,6 +139,8 @@ namespace LHON_Form
             detox = detox_init = new float[im_size * im_size];
             tox = tox_init = new float[im_size * im_size];
             tox_prod = tox_prod_init = new float[im_size * im_size];
+
+            id_center_axon = new uint[im_size * im_size];
 
             axon_mask = axon_mask_init = new byte[im_size * im_size]; // for display. if 1: axon is live, if 2: axon is dead, otherwise 0.
             pix_idx = new int[im_size * im_size]; // linear index of pixels within nerve
@@ -207,6 +222,7 @@ namespace LHON_Form
 
 
             Func<int, int, uint> xy_to_lin_idx = (x, y) => (uint)x * (uint)im_size + (uint)y;
+            Func<uint, uint, uint> xy_to_lin_idx_u = (x, y) => (uint)x * (uint)im_size + (uint)y;
 
             for (int i = 0; i < mdl.n_axons; i++)
             {
@@ -220,7 +236,8 @@ namespace LHON_Form
                 float radiusCircle = mdl.axon_coor[i][2] * res;
                 AxCorPix[i, 0] = xCenter; AxCorPix[i, 1] = yCenter; AxCorPix[i, 2] = radiusCircle;
                 death_itr[i] = 0;
-                axons_cent_pix[i] = (uint)xCenter * im_size + (uint)yCenter;
+                axons_cent_pix[i] = xy_to_lin_idx_u((uint)xCenter, (uint)yCenter);
+                id_center_axon[xy_to_lin_idx_u((uint)xCenter, (uint)yCenter)] = (uint) i;
                 axon_lbl[i] = new AxonLabelClass { lbl = "", x = xCenter, y = yCenter };
                 axons_surr_rate_idx[i + 1] = axons_surr_rate_idx[i];
 
@@ -250,7 +267,7 @@ namespace LHON_Form
                             uint lin_idx = xy_to_lin_idx(x, y);
                             is_inside_this_axon[x - box_x_min[i], y - box_y_min[i]] = true;
                             axon_mask[lin_idx] = 1; // alive
-                            axons_inside_pix[axons_inside_pix_idx[i + 1]++] = (uint)x * (uint)im_size + (uint)y;
+                            axons_inside_pix[axons_inside_pix_idx[i + 1]++] = lin_idx;
                             tox_prod[lin_idx] = k_tox_prod;
                             detox[lin_idx] = k_detox_intra;
                             if (axon_is_init_insult[i])
@@ -278,10 +295,12 @@ namespace LHON_Form
                             uint lin_idx = xy_to_lin_idx(x, y) * 4 + k;
 
                             if (xy_inside != neigh_k_inside)
-                                rate[lin_idx] = k_rate_boundary;
+                            {
+                                // rate[lin_idx] = k_rate_boundary;
+                            }
                             else if (xy_inside)
                             {
-                                rate[lin_idx] = k_rate_live_axon;
+                                // rate[lin_idx] = k_rate_live_axon;
                                 axons_surr_rate[axons_surr_rate_idx[i + 1]++] = lin_idx;
                             }
                         }
@@ -293,8 +312,8 @@ namespace LHON_Form
                 // Debug.WriteLine("{0} vs {1}", (Math.Pow(mdl.axon_coor[i][2] * res, 2) * Math.PI).ToString("0.0"), axons_inside_pix_idx[i + 1] - axons_inside_pix_idx[i]);
             }
 
-            localGPUVar.Launch(grid_siz_prep, block_siz_prep).cuda_prep1(im_size, pix_out_of_nerve_dev, rate_dev);
-            localGPUVar.CopyFromDevice(rate_dev, rate);
+            //localGPUVar.Launch(grid_siz_prep, block_siz_prep).cuda_prep1(im_size, pix_out_of_nerve_dev, rate_dev);
+            //localGPUVar.CopyFromDevice(rate_dev, rate);
 
             prep_prof.Time(6);
 

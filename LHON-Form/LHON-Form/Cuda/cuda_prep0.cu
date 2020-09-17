@@ -25,6 +25,17 @@ extern "C" __global__  void cuda_prep0(unsigned short im_size, int nerve_cent_pi
 			rate[xy4 + 3] = k_rate_extra;
 
 			detox[xy] = k_detox_extra;
+
+			if (pix_out_of_nerve[xy + im_size]) rate[xy4] = 0;
+			if (pix_out_of_nerve[xy - im_size]) rate[xy4 + 1] = 0;
+			if (pix_out_of_nerve[xy + 1])		rate[xy4 + 2] = 0;
+			if (pix_out_of_nerve[xy - 1])		rate[xy4 + 3] = 0;
+		}
+		else {
+			rate[xy4] = 0;
+			rate[xy4 + 1] = 0;
+			rate[xy4 + 2] = 0;
+			rate[xy4 + 3] = 0;
 		}
 	}
 }

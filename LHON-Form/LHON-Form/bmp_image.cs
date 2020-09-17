@@ -54,8 +54,10 @@ namespace LHON_Form
                 Invoke(new Action(() => Update_bmp_image()));
             else
             {
+                //[DWL] changed the denominator of 'red' to be 'on_death_tox' as opposed to 'death_threashold'
+                //[DWL] this was the chain reaction becomes clearly visible.
                 gpu.Launch(update_bmp_gride_size_2D, update_bmp_block_size_2D).cuda_update_image(im_size, bmp_im_size, bmp_image_compression_ratio,
-                    bmp_bytes_dev, tox_dev, axon_mask_dev, init_insult_mask_dev, death_tox_thres, show_opts_dev);
+                    bmp_bytes_dev, tox_dev, axon_mask_dev, init_insult_mask_dev, on_death_tox, show_opts_dev);
 
                 gpu.CopyFromDevice(bmp_bytes_dev, bmp_bytes);
 
