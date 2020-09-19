@@ -14,3 +14,4 @@ C:\home\clambiri\workspace\LHON-Sim\LHON-Form\Custom-Controls\bin\Debug\Custom-C
 C:\home\clambiri\workspace\LHON-Sim\LHON-Form\Custom-Controls\obj\Debug\CustomControls.csproj.CoreCompileInputs.cache
 C:\home\clambiri\workspace\LHON-Sim\LHON-Form\Custom-Controls\obj\Debug\Custom-Controls.dll
 C:\home\clambiri\workspace\LHON-Sim\LHON-Form\Custom-Controls\obj\Debug\Custom-Controls.pdb
+C:\home\clambiri\workspace\LHON-Sim\LHON-Form\Custom-Controls\obj\Debug\CustomControls.csprojAssemblyReference.cache

@@ -268,7 +268,9 @@ namespace LHON_Form
                             is_inside_this_axon[x - box_x_min[i], y - box_y_min[i]] = true;
                             axon_mask[lin_idx] = 1; // alive
                             axons_inside_pix[axons_inside_pix_idx[i + 1]++] = lin_idx;
-                            tox_prod[lin_idx] = k_tox_prod;
+                            // [DWL] Make tox production per pixel inverse proportional with
+                            //       axon circumference (2*pi*r)
+                            tox_prod[lin_idx] = 2*k_tox_prod / (mdl.axon_coor[i][2] * res);
                             detox[lin_idx] = k_detox_intra;
                             if (axon_is_init_insult[i])
                                 tox[lin_idx] = insult_tox;

@@ -195,10 +195,14 @@ namespace LHON_Form
             }
         }
 
-        private void picB_Resize(object sender, EventArgs e)
+        private void label29_Click(object sender, EventArgs e)
         {
 
         }
 
+        private void txt_on_death_tox_TextChanged(object sender, EventArgs e)
+        {
+
+        }
     }
 }
