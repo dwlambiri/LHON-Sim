@@ -314,8 +314,8 @@ namespace LHON_Form
                 // Debug.WriteLine("{0} vs {1}", (Math.Pow(mdl.axon_coor[i][2] * res, 2) * Math.PI).ToString("0.0"), axons_inside_pix_idx[i + 1] - axons_inside_pix_idx[i]);
             }
 
-            //localGPUVar.Launch(grid_siz_prep, block_siz_prep).cuda_prep1(im_size, pix_out_of_nerve_dev, rate_dev);
-            //localGPUVar.CopyFromDevice(rate_dev, rate);
+            localGPUVar.Launch(grid_siz_prep, block_siz_prep).cuda_prep1(im_size, pix_out_of_nerve_dev, rate_dev);
+            localGPUVar.CopyFromDevice(rate_dev, rate);
 
             prep_prof.Time(6);
 
