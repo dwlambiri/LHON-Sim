@@ -22,13 +22,17 @@ namespace LHON_Form
         // ========================
 
         /* Units:
+        [DWL] Changed the constants from umol to zeptomol. 
+        [DWL] The time constant has to be x*minutes or some other larger value
+        [DWL] We know that the evolution is about 6 to 9 months. Thus
+        [DWL] the iteration constant must be 9month/numIter.
         Constant                        UI Unit                  Algorithm Unit          Conversion Factor
-        k_detox, k_rate                  1 / sec                   1 / itr               K / resolution ^ 2
-        k_tox_prod                       micromol / um^2 / sec     tox / pix / itr       K / resolution ^ 4
-        death_tox_thres, insult_tox      micromol / um^2           tox / pix             K / resolution ^ 2
+        k_detox, k_rate                  1 / RealTimeUnit (RTU)    1 / itr               K / resolution ^ 2
+        k_tox_prod                       zeptomol / um^2 /RTU      tox / pix / itr       K / resolution ^ 4
+        death_tox_thres, insult_tox      zeptomol / um^2           tox / pix             K / resolution ^ 2
         
-            sec = (CONSTANT / resolution ^ 2) * itr
-            micromol / um^2 = (CONSTANT * resolution ^ 2) * tox / pix
+            RealTimeUnit (RTU) = (CONSTANT / resolution ^ 2) * itr
+            zeptomol / um^2    = (CONSTANT * resolution ^ 2) * tox / pix
         */
 
         private float k_detox_intra, k_detox_extra, k_tox_prod, death_tox_thres, insult_tox, on_death_tox,
@@ -85,13 +89,23 @@ namespace LHON_Form
             mdl_nerve_r = mdl.nerve_scale_ratio * mdl_real_nerve_r;
 
             float rate_conv = Pow2(res / min_res);
-            float temp = 1F / rate_conv;
-            if (setts.rate_live > temp ||
-                setts.rate_bound > temp ||
-                setts.rate_dead > temp ||
-                setts.rate_extra > temp)
+            float upperValue_c = 1F;
+            if (setts.rate_live > upperValue_c ||
+                setts.rate_bound > upperValue_c ||
+                setts.rate_dead > upperValue_c ||
+                setts.rate_extra > upperValue_c)
             {
-                Append_stat_ln("Error: Diffusion param greater than " + temp.ToString() + ". Preprocessing aborted.");
+                Append_stat_ln("Error: Diffusion param greater than " + upperValue_c.ToString() + ". Preprocessing aborted.");
+                return;
+            }
+
+            float lowerValue_c = 0F;
+            if (setts.rate_live < lowerValue_c ||
+                setts.rate_bound < lowerValue_c ||
+                setts.rate_dead < lowerValue_c ||
+                setts.rate_extra < lowerValue_c)
+            {
+                Append_stat_ln("Error: Diffusion param less  than " + lowerValue_c.ToString() + ". Preprocessing aborted.");
                 return;
             }
 
@@ -109,7 +123,7 @@ namespace LHON_Form
             // 1 - real detox rate to reduce computation ->  tox[x_y] *= detox[x_y]
             k_detox_intra = 1F - setts.detox_intra;
             k_detox_extra = 1F - setts.detox_extra;
-            k_tox_prod = setts.tox_prod;
+            k_tox_prod = 2*setts.tox_prod / Pow2(res);
 
             float fiveF = 5F;
 
@@ -120,9 +134,9 @@ namespace LHON_Form
             k_rate_extra = setts.rate_extra / fiveF * rate_conv;
 
             // 
-            death_tox_thres = setts.death_tox_thres;
-            insult_tox = setts.insult_tox;
-            on_death_tox = setts.on_death_tox;
+            death_tox_thres = setts.death_tox_thres / Pow2(res);
+            insult_tox = setts.insult_tox / Pow2(res);
+            on_death_tox = setts.on_death_tox / Pow2(res);
 
             prep_prof.Time(0);
             Tic();
@@ -269,9 +283,14 @@ namespace LHON_Form
                             axon_mask[lin_idx] = 1; // alive
                             axons_inside_pix[axons_inside_pix_idx[i + 1]++] = lin_idx;
                             // [DWL] Make tox production per pixel inverse proportional with
-                            //       axon circumference (2*pi*r)
-                            tox_prod[lin_idx] = 2*k_tox_prod / (mdl.axon_coor[i][2] * res);
+                            //       *reaL* axon circumference (2*pi*r) => r is radius in um *not* pixels
+                            // AxonTox = tox*pi*(pix)^2=2*k_tox*pix^2/(r*(res)^2)
+                            //         =2*k_tox*(r*res)^2/r/res^2=2*k_tox*r
+                            tox_prod[lin_idx] = k_tox_prod / (mdl.axon_coor[i][2]);
                             detox[lin_idx] = k_detox_intra;
+                            // AxonInsult = i_pix*pi*pix^2= i_t/res^2*pi*pix^2=i_t/res^2*pi*(r*res)^2
+                            //            = i_t*pi*r^2
+                            // insult_tox has been resized before the assignment
                             if (axon_is_init_insult[i])
                                 tox[lin_idx] = insult_tox;
                         }

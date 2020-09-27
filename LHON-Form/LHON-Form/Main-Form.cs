@@ -108,7 +108,7 @@ namespace LHON_Form
                     gpu.Launch(blocks_per_grid_2D_pix, threads_per_block_1D).cuda_tox_sum(pix_idx_dev, pix_idx_num, tox_dev, sum_tox_dev);
                     gpu.CopyFromDevice(sum_tox_dev, out sum_tox);
 
-                    if (Math.Abs(sum_tox - lvl_tox_last) > 0.01F * 1000000F)
+                    if (Math.Abs(sum_tox - lvl_tox_last) > 1000F)
                     {
                         duration_of_no_change = 0;
                         lvl_tox_last = sum_tox;

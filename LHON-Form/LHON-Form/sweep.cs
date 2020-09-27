@@ -30,11 +30,12 @@ namespace LHON_Form
             "Resolution",
 
             "Live Rate",
-            "Dead Rate",
             "Boundary Rate",
-            "Extra Rate",
+            "Extra & Dead Rate",
+            "All Rates",
             "Death Thr",
             "Tox Prod",
+            "On Death",
 
             "Detox Intra",
             "Detox Extra",
@@ -76,7 +77,14 @@ namespace LHON_Form
                     if (selection1 > 0)
                     {
                         start1 = float.Parse(values[1]);
-                        if (sweep_repetitions1 > 1) end1 = float.Parse(values[2]);
+                        if (sweep_repetitions1 > 1)
+                        {
+                            end1 = float.Parse(values[2]);
+                        }
+                        else
+                        {
+                            end1 = start1;
+                        }
                     }
                 }
                 catch
@@ -92,10 +100,20 @@ namespace LHON_Form
                     if (selection2 > 0)
                     {
                         start2 = float.Parse(values[1]);
-                        if (sweep_repetitions2 > 1) end2 = float.Parse(values[2]);
+                        if (sweep_repetitions2 > 1)
+                        {
+                            end2 = float.Parse(values[2]);
+                        }
+                        else
+                        {
+                            end2 = start2;
+                        }
                     }
                 }
-                catch { }
+                catch {
+                    MessageBox.Show("Error in second parameter to Sweep command!");
+                    return;
+                }
 
                 btn_sweep.Text = "S&top";
                 sweep_is_running = true;
@@ -106,11 +124,13 @@ namespace LHON_Form
                 int failures = 0;
                 string dir_name = null;
 
+                Append_stat_ln(parameter_name1 + " , " + parameter_name2 + " ,  Percent Alive");
+
                 for (int i1 = 0; i1 < sweep_repetitions1; i1++)
                 {
                     float val1 = Sweep_upd_param(selection1, start1, end1, i1, sweep_repetitions1);
                     float val2 = 0;
-                    Append_stat_ln(parameter_name1 + " : " + val1.ToString());
+                    //Append_stat_ln(parameter_name1 + " : " + val1.ToString());
 
                     bool sel1_regenerate_model = selection1 < 2;
                     bool sel2_regenerate_model = selection2 < 2;
@@ -120,7 +140,7 @@ namespace LHON_Form
                         if (sweep_repetitions2 > 0)
                         {
                             val2 = Sweep_upd_param(selection2, start2, end2, i2, sweep_repetitions2);
-                            Append_stat_ln(parameter_name2 + " : " + val2.ToString());
+                            Append_stat(val1.ToString() + "   ,   " + val2.ToString() + "   ,    ");
                         }
                         Update_mdl_and_setts_ui();
 
@@ -153,27 +173,30 @@ namespace LHON_Form
                             failures++;
                         }
                         //successful
-                        else if (chk_save_sw_prog.Checked)
-                        {
-                            if (dir_name == null)
+                        else {
+                            Append_stat_ln(((float)num_alive_axons[0] * 100 / mdl.n_axons).ToString("0.0") + "%");
+                            if (chk_save_sw_prog.Checked)
                             {
-                                string par_nam = "(" + parameter_name1 + ")";
-                                if (sweep_repetitions2 > 0)
-                                    par_nam += "(" + parameter_name2 + ")";
-                                dir_name = string.Format(ProjectOutputDir + "Progression\\{0} {1}", DateTime.Now.ToString("yyyy-MM-dd @HH-mm-ss"), par_nam);
-                                Directory.CreateDirectory(dir_name);
-                            }
-                            string par_val;
-                            if (parameters_name[selection1] == "Repeat")
-                                par_val = val1.ToString("(00)");
-                            else
-                                par_val = val1.ToString("(0.00)");
-                            if (sweep_repetitions2 > 0)
-                                if (parameters_name[selection2] == "Repeat")
-                                    par_val += val2.ToString("(00)");
+                                if (dir_name == null)
+                                {
+                                    string par_nam = "(" + parameter_name1 + ")";
+                                    if (sweep_repetitions2 > 0)
+                                        par_nam += "(" + parameter_name2 + ")";
+                                    dir_name = string.Format(ProjectOutputDir + "Progression\\{0} {1}", DateTime.Now.ToString("yyyy-MM-dd @HH-mm-ss"), par_nam);
+                                    Directory.CreateDirectory(dir_name);
+                                }
+                                string par_val;
+                                if (parameters_name[selection1] == "Repeat")
+                                    par_val = val1.ToString("(00)");
                                 else
-                                    par_val += val2.ToString("(0.00)");
-                            Save_Progress(string.Format("{0}\\{1}.prgim", dir_name, par_val));
+                                    par_val = val1.ToString("(0.00)");
+                                if (sweep_repetitions2 > 0)
+                                    if (parameters_name[selection2] == "Repeat")
+                                        par_val += val2.ToString("(00)");
+                                    else
+                                        par_val += val2.ToString("(0.00)");
+                                Save_Progress(string.Format("{0}\\{1}.prgim", dir_name, par_val));
+                            }
                         }
                         i2++;
                     }
@@ -209,20 +232,27 @@ namespace LHON_Form
                 case "Live Rate":
                     setts.rate_live = val;
                     break;
-                case "Dead Rate":
-                    setts.rate_dead = val;
-                    break;
                 case "Boundary Rate":
                     setts.rate_bound = val;
                     break;
-                case "Extra Rate":
+                case "Extra & Dead Rate":
                     setts.rate_extra = val;
+                    setts.rate_dead = val;
+                    break;
+                case "All Rates":
+                    setts.rate_live = val;
+                    setts.rate_bound = val;
+                    setts.rate_extra = val;
+                    setts.rate_dead = val;
                     break;
                 case "Death Thr":
                     setts.death_tox_thres = val;
                     break;
                 case "Tox Prod":
                     setts.tox_prod = val;
+                    break;
+                case "On Death":
+                    setts.on_death_tox = val;
                     break;
                 case "Detox Intra":
                     setts.detox_intra = val;
