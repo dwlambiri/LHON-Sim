@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 using System.Diagnostics;
 using System.Linq;
 using Cudafy;
@@ -14,7 +15,7 @@ namespace LHON_Form
         //      Constants
         // ========================
 
-        private readonly float min_res = 10F;
+        private readonly float min_res_c = 10F;
         private int process_clearance = 2;
 
         // ========================
@@ -22,17 +23,18 @@ namespace LHON_Form
         // ========================
 
         /* Units:
-        [DWL] Changed the constants from umol to zeptomol. 
+        [DWL] Changed the constants from umol to zeptomol (zmol). 
         [DWL] The time constant has to be x*minutes or some other larger value
         [DWL] We know that the evolution is about 6 to 9 months. Thus
         [DWL] the iteration constant must be 9month/numIter.
+        [DWL] RTU = real time unit (time measured in units of physical time)
         Constant                        UI Unit                  Algorithm Unit          Conversion Factor
-        k_detox, k_rate                  1 / RealTimeUnit (RTU)    1 / itr               K / resolution ^ 2
-        k_tox_prod                       zeptomol / um^2 /RTU      tox / pix / itr       K / resolution ^ 4
-        death_tox_thres, insult_tox      zeptomol / um^2           tox / pix             K / resolution ^ 2
+        k_detox, k_rate                  1 / RTU                   1 / itr               K / timeRes
+        k_tox_prod                       zmol / um^2 /RTU          tox / pix / itr       K / spatialRes ^ 2 / timeRes
+        death_tox_thres, insult_tox      zmol / um^2               tox / pix             K / spatialRes ^ 2
         
-            RealTimeUnit (RTU) = (CONSTANT / resolution ^ 2) * itr
-            zeptomol / um^2    = (CONSTANT * resolution ^ 2) * tox / pix
+            Value RTU          = (Value / timeRes)  itr
+            Value zmol / um^2  = (Value / spatialRes ^ 2)  zmol / pix
         */
 
         private float k_detox_intra, k_detox_extra, k_tox_prod, death_tox_thres, insult_tox, on_death_tox,
@@ -43,10 +45,10 @@ namespace LHON_Form
         //              Variables
         // ====================================
 
-        private float[] tox, tox_init, tox_dev, tox_new_dev; // Tox
-        private float[] rate, rate_init, rate_dev; // Rate
-        private float[] detox, detox_init, detox_dev; // Detox
-        private float[] tox_prod, tox_prod_init, tox_prod_dev; // Tox_prod
+        private float[] tox, tox_dev, tox_new_dev; // Tox
+        private float[] rate, rate_dev; // Rate
+        private float[] detox, detox_dev; // Detox
+        private float[] tox_prod, tox_prod_dev; // Tox_prod
         private uint[] axons_cent_pix, axons_cent_pix_dev; // Center pixel of each axon
         private uint[] axons_inside_pix, axons_inside_pix_dev; // 1D array for all axons
         private uint[] axons_inside_pix_idx, axons_inside_pix_idx_dev; // indices for the above 1D array
@@ -88,7 +90,7 @@ namespace LHON_Form
             float res = setts.resolution;
             mdl_nerve_r = mdl.nerve_scale_ratio * mdl_real_nerve_r;
 
-            float rate_conv = Pow2(res / min_res);
+            float rate_conv = Pow2(res / min_res_c);
             float upperValue_c = 1F;
             if (setts.rate_live > upperValue_c ||
                 setts.rate_bound > upperValue_c ||
@@ -149,10 +151,10 @@ namespace LHON_Form
             Init_bmp_write();
 
             // ======== Pixel Properties =========
-            rate = rate_init = new float[im_size * im_size * 4];
-            detox = detox_init = new float[im_size * im_size];
-            tox = tox_init = new float[im_size * im_size];
-            tox_prod = tox_prod_init = new float[im_size * im_size];
+            rate = new float[im_size * im_size * 4];
+            detox = new float[im_size * im_size];
+            tox = new float[im_size * im_size];
+            tox_prod = new float[im_size * im_size];
 
             id_center_axon = new uint[im_size * im_size];
 

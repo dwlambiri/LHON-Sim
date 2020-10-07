@@ -204,5 +204,15 @@ namespace LHON_Form
         {
 
         }
+
+        private void lbl_tox_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label11_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }

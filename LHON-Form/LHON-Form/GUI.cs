@@ -266,7 +266,7 @@ namespace LHON_Form
             {
                 float now = tt_sim.Read();
                 lbl_itr.Text = iteration.ToString("0");
-                lbl_tox.Text = (sum_tox / 1000).ToString("0.00") + " attoMol";
+                lbl_tox.Text = (sum_tox / 1000).ToString("0.00") + " aMol";
                 lbl_real_time.Text = time.ToString("0.0");
                 lbl_alive_axons_perc.Text = ((float)num_alive_axons[0] * 100 / mdl.n_axons).ToString("0.0") + "%";
                 var span = TimeSpan.FromSeconds(now / 1000);
