@@ -15,7 +15,7 @@ namespace LHON_Form
             if (sweep_is_running)
             {
                 stop_sweep_req = true;
-                Stop_sim(sim_stat_enum.Paused);
+                Stop_sim(Sim_stat_enum.Paused);
                 btn_sweep.Text = "S&weep";
                 Append_stat_ln("Sweeping Terminated by User!");
             }
@@ -57,7 +57,7 @@ namespace LHON_Form
 
         private async void Sweep()
         {
-            if (sim_stat == sim_stat_enum.Running) return;
+            if (sim_stat == Sim_stat_enum.Running) return;
 
             try
             {
@@ -150,7 +150,7 @@ namespace LHON_Form
                             // Regenerate Model
                             new_model_worker.RunWorkerAsync();
                             await Task.Delay(delay_ms);
-                            while (sim_stat == sim_stat_enum.Running)
+                            while (sim_stat == Sim_stat_enum.Running)
                             {
                                 await Task.Delay(delay_ms);
                                 if (stop_sweep_req) { stop_sweep_req = false; sweep_is_running = false; return; }
@@ -161,14 +161,14 @@ namespace LHON_Form
 
                         Start_sim();
                         //Debug.WriteLine("simulation should've been started" + sim_stat);
-                        while (sim_stat != sim_stat_enum.Successful && sim_stat != sim_stat_enum.Failed)
+                        while (sim_stat != Sim_stat_enum.Successful && sim_stat != Sim_stat_enum.Failed)
                         {
                             await Task.Delay(delay_ms);
                             if (stop_sweep_req) { stop_sweep_req = false; sweep_is_running = false; return; }
                         }
                         await Task.Delay(delay_ms / 5);
 
-                        if (sim_stat == sim_stat_enum.Failed)
+                        if (sim_stat == Sim_stat_enum.Failed)
                         {
                             failures++;
                         }

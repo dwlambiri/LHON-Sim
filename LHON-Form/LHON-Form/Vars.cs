@@ -18,28 +18,29 @@ namespace LHON_Form
         private AviManager aviManager;
         private string avi_file;
         private VideoStream aviStream;
-        private float sum_tox, areal_progress, chron_progress;
+        private float sum_tox, max_sum_tox;
+        //private float areal_progress, chron_progress;
         private float[] progress_dat = new float[3];
         private const int progress_num_frames = 20;
         private double resolution_reduction_ratio;
         private ushort prog_im_siz, prog_im_siz_default = 100;
         private byte[,] progression_image_dev;
-        private byte[,,] areal_progression_image_stack, chron_progression_image_stack;
-        private float[] areal_progress_chron_val, chron_progress_areal_val;
-        private uint areal_progression_image_stack_cnt, chron_progression_image_stack_cnt;
+        //private byte[,,] areal_progression_image_stack, chron_progression_image_stack;
+        //private float[] areal_progress_chron_val, chron_progress_areal_val;
+        //private uint areal_progression_image_stack_cnt, chron_progression_image_stack_cnt;
         private float[,] progression_image_sum_float_dev;
         private uint[,] progress_image_num_averaged_pix_dev;
-        private float areal_progress_lim;
+        //private float areal_progress_lim;
         private bool stop_sweep_req = false, sweep_is_running = false;
         private float[] sum_tox_dev, progress_dev;
         private uint iteration = 0;
-        private float time;
+        private float realTime;
 
         // float[] init_insult = new float[2] { 0, 0 };
 
-        private enum sim_stat_enum { None, Running, Paused, Successful, Failed };
+        private enum Sim_stat_enum { None, Running, Paused, Successful, Failed };
 
-        private sim_stat_enum sim_stat = sim_stat_enum.None;
+        private Sim_stat_enum sim_stat = Sim_stat_enum.None;
 
         private class AxonLabelClass
         {

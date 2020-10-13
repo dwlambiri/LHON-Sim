@@ -205,7 +205,7 @@ namespace LHON_Form
             Load_mdl_cdf_table();
             mdl_nerve_r = mdl.nerve_scale_ratio * mdl_real_nerve_r;
 
-            sim_stat = sim_stat_enum.Running;
+            sim_stat = Sim_stat_enum.Running;
 
             mdl_axons_coor = new List<float[]>();
             mdl_n_axons = 0;
@@ -335,7 +335,7 @@ namespace LHON_Form
 
             model_id = DateTime.Now.Ticks / 1000;
             model_is_saved = false;
-            sim_stat = sim_stat_enum.None;
+            sim_stat = Sim_stat_enum.None;
 
             Append_stat("Model Generated in " + (Toc() / 1000).ToString("0.0") + " secs\n");
             Debug.WriteLine("model done");

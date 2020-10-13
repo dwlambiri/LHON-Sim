@@ -61,7 +61,7 @@ namespace LHON_Form
                     Append_stat_ln("You must preprocess the model before resetting the state.\n");
                     return;
                 }
-                if (sim_stat == sim_stat_enum.Running)
+                if (sim_stat == Sim_stat_enum.Running)
                 {
                     Append_stat_ln("You must stop the simulation before resetting the states.\n");
                     return;
@@ -71,17 +71,17 @@ namespace LHON_Form
 
             btn_start.Click += (s, e) =>
             {
-                if (sim_stat == sim_stat_enum.None || sim_stat == sim_stat_enum.Paused)
+                if (sim_stat == Sim_stat_enum.None || sim_stat == Sim_stat_enum.Paused)
                     Start_sim();
-                else if (sim_stat == sim_stat_enum.Running)
-                    Stop_sim(sim_stat_enum.Paused);
+                else if (sim_stat == Sim_stat_enum.Running)
+                    Stop_sim(Sim_stat_enum.Paused);
             };
 
-            btn_redraw.Click += (s, e) => { if (sim_stat != sim_stat_enum.Running && !new_model_worker.IsBusy) new_model_worker.RunWorkerAsync(); };
+            btn_redraw.Click += (s, e) => { if (sim_stat != Sim_stat_enum.Running && !new_model_worker.IsBusy) new_model_worker.RunWorkerAsync(); };
 
             btn_preprocess.Click += (s, e) =>
             {
-                if (sim_stat == sim_stat_enum.Running)
+                if (sim_stat == Sim_stat_enum.Running)
                 {
                     Append_stat_ln("You must stop the simulation before preprogress.\n");
                     return;
@@ -99,19 +99,23 @@ namespace LHON_Form
                 if (chk_rec_avi.Checked)
                 {
                     chk_rec_avi.Text = "Recording";
-                    //avi_file = ProjectOutputDir + @"Recordings\" + DateTime.Now.ToString("yyyy-MM-dd @HH-mm-ss") + '(' + (im_size * im_size / 1e6).ToString("0.0") + "Mpix).avi";
-                    //aviManager = new AviManager(avi_file, false);
-                    //Avi.AVICOMPRESSOPTIONS options = new Avi.AVICOMPRESSOPTIONS();
-                    //options.fccType = (uint)Avi.mmioStringToFOURCC("vids", 5);
-                    //options.fccHandler = (uint)Avi.mmioStringToFOURCC("CVID", 5);
-                    //options.dwQuality = 1;
-                    //aviStream = aviManager.AddVideoStream(options, 10, bmp);
+#if false
+                    avi_file = ProjectOutputDir + @"Recordings\" + DateTime.Now.ToString("yyyy-MM-dd @HH-mm-ss") + '(' + (im_size * im_size / 1e6).ToString("0.0") + "Mpix).avi";
+                    aviManager = new AviManager(avi_file, false);
+                    Avi.AVICOMPRESSOPTIONS options = new Avi.AVICOMPRESSOPTIONS();
+                    options.fccType = (uint)Avi.mmioStringToFOURCC("vids", 5);
+                    options.fccHandler = (uint)Avi.mmioStringToFOURCC("CVID", 5);
+                    options.dwQuality = 1;
+                    aviStream = aviManager.AddVideoStream(options, 10, bmp); 
+#endif
                 }
                 else
                 {
                     chk_rec_avi.Text = "Record";
-                    //aviManager.Close();
-                    //Process.Start(avi_file);
+#if false
+                    aviManager.Close();
+                    Process.Start(avi_file);
+#endif
                     if (gifEnc.Frames.Count > 0)
                     {
                         var path = ProjectOutputDir + @"Recordings\" + DateTime.Now.ToString("yyyy-MM-dd @HH-mm-ss") + '(' + (im_size * im_size / 1e6).ToString("0.0") + "Mpix).gif";
@@ -179,21 +183,21 @@ namespace LHON_Form
                 Append_stat_ln("You must preprocess the model before running simulation.\n");
                 return;
             }
-            if (sim_stat == sim_stat_enum.None || sim_stat == sim_stat_enum.Paused)
+            if (sim_stat == Sim_stat_enum.None || sim_stat == Sim_stat_enum.Paused)
             {
-                sim_stat = sim_stat_enum.Running;
+                sim_stat = Sim_stat_enum.Running;
                 alg_worker.RunWorkerAsync();
                 Set_btn_start_txt("&Pause");
                 Update_bottom_stat("Simulation is Running");
             }
         }
 
-        private void Stop_sim(sim_stat_enum stat)
+        private void Stop_sim(Sim_stat_enum stat)
         {
-            if (sim_stat == sim_stat_enum.Running)
+            if (sim_stat == Sim_stat_enum.Running)
             {
                 sim_stat = stat;
-                if (sim_stat == sim_stat_enum.Paused) Set_btn_start_txt("&Continue");
+                if (sim_stat == Sim_stat_enum.Paused) Set_btn_start_txt("&Continue");
                 else Set_btn_start_txt("&Start");
 
                 Update_bottom_stat("Simulation is " + sim_stat.ToString());
@@ -205,7 +209,7 @@ namespace LHON_Form
 
         private void Main_Form_FormClosing(object sender, FormClosingEventArgs e)
         {
-            sim_stat = sim_stat_enum.Paused;
+            sim_stat = Sim_stat_enum.Paused;
             Thread.Sleep(10);
         }
 
@@ -267,13 +271,29 @@ namespace LHON_Form
                 float now = tt_sim.Read();
                 lbl_itr.Text = iteration.ToString("0");
                 lbl_tox.Text = (sum_tox / 1000).ToString("0.00") + " aMol";
-                lbl_real_time.Text = time.ToString("0.0");
+                lbl_max_tox.Text = (max_sum_tox / 1000).ToString("0.00") + " aMol";
+                // [DWL] zMol*32g/Mol/area (um^2)/height (um)
+                // 32*tox*10^-21 g / (pi*r^2) / 10^-12 / (1/res) /10^-6 = 32*tox*10^-21*10^18*res/(pi*r^2) g/m^3
+                // 32*tox*10^-3*res/(pi*r^2) g/m^3 = 32*tox*res/(pi*r^2) mg / m^3
+                // OXYGEN: 5L of molecular oxygen in body
+                //         5L / 0.1 m^3 = 50L / m^3
+                //         1 mol ~ 22.4 L => 1L ~ 1/22.4 mol
+                //         5/22.4 mol of oxygen in body
+                //         density = 50/22.4 mol/m^3 = 32*50/22.4 mol/m^3 = 71.4 g/m^4
+                //         SOX has to be x percent of the overall density to a max of 100%
+                //         possible SOX upper limit  < 10% => 7 g / m^3 = 7000 mg / m^3
+                // DeathThr / Volume = the zmol*res/um^3 = thr*32*10^-21*res*10^18= thr*32*res*10^-3 g/m^3 < UpperLimit
+                // thr < UpperLimit/32*10^3/res ~ 220 / resolution
+                // thr+onDeath < UpperLimit/32*10^3/res ~ 220/ resolution
+                // dead diam < 4*prod/(scav*thr)
+                lbl_max_density.Text = (max_sum_tox * 32 / 1000/ Pow2(mdl_nerve_r) / 3.1415 * setts.resolution).ToString("0.00");  //  in g/m^3 => max should not be over 35
+                lbl_density.Text = (sum_tox * 32 / 1000 / Pow2(mdl_nerve_r) / 3.1415 * setts.resolution).ToString("0.00"); //  in g/m^3 => max should not be over 35
                 lbl_alive_axons_perc.Text = ((float)num_alive_axons[0] * 100 / mdl.n_axons).ToString("0.0") + "%";
                 var span = TimeSpan.FromSeconds(now / 1000);
                 lbl_sim_time.Text = string.Format("{0:00}:{1:00}:{2:00}", span.Minutes, span.Seconds, span.Milliseconds);
 
                 float itr_p_s = 0;
-                if (sim_stat == sim_stat_enum.Running)
+                if (sim_stat == Sim_stat_enum.Running)
                 {
                     if (iteration < prev_itr || now < prev_itr_t)
                         itr_p_s = iteration / now * 1000;
@@ -295,8 +315,9 @@ namespace LHON_Form
                 if (!float.IsInfinity(estimated_total_itr_s) && !float.IsNaN(estimated_total_itr_s) && estimated_total_itr_s > 0)
                 {
                     span = TimeSpan.FromSeconds((last_itr - iteration) / estimated_total_itr_s);
-                    lbl_rem_time.Text = string.Format("{0}:{1:00}:{2:00}", (int)span.TotalHours, span.Minutes, span.Seconds);
+                    //lbl_density.Text = string.Format("{0}:{1:00}:{2:00}", (int)span.TotalHours, span.Minutes, span.Seconds);
                 }
+                
             }));
         }
 

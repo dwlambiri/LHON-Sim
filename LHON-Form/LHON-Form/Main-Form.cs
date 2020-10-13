@@ -69,7 +69,7 @@ namespace LHON_Form
             while (true)
             {
                 iteration++;
-                time += dt;
+                realTime += dt;
 
                 bool update_gui = iteration % gui_iteration_period == 0;
 
@@ -108,16 +108,24 @@ namespace LHON_Form
                     gpu.Launch(blocks_per_grid_2D_pix, threads_per_block_1D).cuda_tox_sum(pix_idx_dev, pix_idx_num, tox_dev, sum_tox_dev);
                     gpu.CopyFromDevice(sum_tox_dev, out sum_tox);
 
-                    if (Math.Abs(sum_tox - lvl_tox_last) > 1000F)
-                    {
-                        duration_of_no_change = 0;
-                        lvl_tox_last = sum_tox;
+                    if ((stop_at_iteration == 0) && Math.Abs(sum_tox - lvl_tox_last) < 1000F) { 
+                    
+                      duration_of_no_change += gui_iteration_period;
+                      if (duration_of_no_change >= stop_sim_at_duration_of_no_change)
+                      {
+                        Stop_sim(Sim_stat_enum.Successful);
+                      }
+                        
                     }
                     else
                     {
-                        duration_of_no_change += gui_iteration_period;
-                        if (duration_of_no_change >= stop_sim_at_duration_of_no_change)
-                            Stop_sim(sim_stat_enum.Successful);
+                        lvl_tox_last = sum_tox;
+                        duration_of_no_change = 0;
+                    }
+
+                    if (max_sum_tox < sum_tox)
+                    {
+                        max_sum_tox = sum_tox;
                     }
 
                     Update_gui_labels();
@@ -126,15 +134,15 @@ namespace LHON_Form
 
                     Update_bmp_image();
 
-                    if (sim_stat == sim_stat_enum.Running && chk_rec_avi.Checked)
+                    if (sim_stat == Sim_stat_enum.Running && chk_rec_avi.Checked)
                         Record_bmp_gif();
 
                     if (en_prof) alg_prof.Time(4);
                 }
 
-                if (sim_stat != sim_stat_enum.Running) break;
-                if (iteration == stop_at_iteration || (stop_at_time > 0 && time >= stop_at_time))
-                    Stop_sim(sim_stat_enum.Successful); // >>>>>>>>>>>>>>>>>> TEMP should be Paused
+                if (sim_stat != Sim_stat_enum.Running) break;
+                if (iteration == stop_at_iteration || (stop_at_time > 0 && realTime >= stop_at_time))
+                    Stop_sim(Sim_stat_enum.Successful); // >>>>>>>>>>>>>>>>>> TEMP should be Paused
 
                 if (main_loop_delay > 0)
                     Thread.Sleep(main_loop_delay * 10);
@@ -156,13 +164,14 @@ namespace LHON_Form
             else
             {
                 sum_tox = 0;
+                max_sum_tox = 0;
                 for (int y = 0; y < im_size; y++)
                     for (int x = 0; x < im_size; x++)
                         sum_tox += tox[x * im_size + y];
 
                 iteration = 0;
                 duration_of_no_change = 0;
-                time = 0;
+                realTime = 0;
 
                 Update_gui_labels();
 
@@ -190,7 +199,7 @@ namespace LHON_Form
                 Update_bmp_image();
                 PicB_Resize(null, null);
 
-                sim_stat = sim_stat_enum.None;
+                sim_stat = Sim_stat_enum.None;
 
             }
         }
@@ -211,6 +220,11 @@ namespace LHON_Form
         }
 
         private void label11_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void tableLayoutPanel13_Paint(object sender, PaintEventArgs e)
         {
 
         }
