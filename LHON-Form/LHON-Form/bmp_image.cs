@@ -137,7 +137,7 @@ namespace LHON_Form
 
         private void mouse_click(MouseEventArgs e)
         {
-            if (e.Button == MouseButtons.Right || sim_stat == sim_stat_enum.Running) return;
+            if (e.Button == MouseButtons.Right || sim_stat == Sim_stat_enum.Running) return;
 
             // Sets the initial insult location
             float[] um = get_mouse_click_um(e);

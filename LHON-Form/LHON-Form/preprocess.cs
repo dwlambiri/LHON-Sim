@@ -24,10 +24,10 @@ namespace LHON_Form
 
         /* Units:
         [DWL] Changed the constants from umol to zeptomol (zmol). 
-        [DWL] The time constant has to be x*minutes or some other larger value
+        [DWL] The realTime constant has to be x*minutes or some other larger value
         [DWL] We know that the evolution is about 6 to 9 months. Thus
         [DWL] the iteration constant must be 9month/numIter.
-        [DWL] RTU = real time unit (time measured in units of physical time)
+        [DWL] RTU = real realTime unit (realTime measured in units of physical realTime)
         Constant                        UI Unit                  Algorithm Unit          Conversion Factor
         k_detox, k_rate                  1 / RTU                   1 / itr               K / timeRes
         k_tox_prod                       zmol / um^2 /RTU          tox / pix / itr       K / spatialRes ^ 2 / timeRes
@@ -97,8 +97,8 @@ namespace LHON_Form
                 setts.rate_dead > upperValue_c ||
                 setts.rate_extra > upperValue_c)
             {
-                Append_stat_ln("Error: Diffusion param greater than " + upperValue_c.ToString() + ". Preprocessing aborted.");
-                return;
+                Append_stat_ln("Error: Diffusion param greater than " + upperValue_c.ToString() + ". Results are undetermined.");
+                //return;
             }
 
             float lowerValue_c = 0F;
@@ -107,15 +107,16 @@ namespace LHON_Form
                 setts.rate_dead < lowerValue_c ||
                 setts.rate_extra < lowerValue_c)
             {
-                Append_stat_ln("Error: Diffusion param less  than " + lowerValue_c.ToString() + ". Preprocessing aborted.");
-                return;
+                Append_stat_ln("Error: Diffusion param less  than " + lowerValue_c.ToString() + ". Results are undetermined.");
+                //return;
             }
 
+            
             if (setts.detox_intra > 1F ||
                 setts.detox_extra> 1F)
             {
-                Append_stat_ln("Error: Detox param greater than 1. Preprocessing aborted.");
-                return;
+                Append_stat_ln("Error: Detox param greater than 1. Results are undetermined.");
+                //return;
             }
 
 
@@ -135,10 +136,35 @@ namespace LHON_Form
             k_rate_dead_axon = setts.rate_dead / fiveF * rate_conv;
             k_rate_extra = setts.rate_extra / fiveF * rate_conv;
 
+            if (k_rate_live_axon > 0.25 || 
+                k_rate_boundary > 0.25 ||
+                k_rate_dead_axon > 0.25 ||
+                k_rate_extra > 0.25)
+            {
+                Append_stat_ln("Error: Diffusion param greater than 0.25. Results are undetermined.");
+                //return;
+            }
+
             // 
             death_tox_thres = setts.death_tox_thres / Pow2(res);
             insult_tox = setts.insult_tox / Pow2(res);
             on_death_tox = setts.on_death_tox / Pow2(res);
+
+            if(setts.death_tox_thres + setts.on_death_tox > 220/ res)
+            {
+                Append_stat_ln("Info: Death Thr + On Death Extra > 220 / Resolution. SOX Density in axon too high.");
+            }
+
+            if(setts.detox_intra != 0 && setts.death_tox_thres != 0)
+            {
+                Append_stat_ln("Info: Axons with diameter under " + (4 * setts.tox_prod *(1-setts.detox_intra)/ setts.detox_intra / setts.death_tox_thres).ToString() +" um will die");
+            }
+            else
+            {
+                Append_stat_ln("Info: All axons will die...");
+            }
+            
+
 
             prep_prof.Time(0);
             Tic();
