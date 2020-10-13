@@ -1,6 +1,11 @@
 ﻿
+#define diff_live_index 1
+#define diff_bound_index 2
+#define diff_dead_index 3
+#define diff_extra_index 4
+
 extern "C" __global__  void cuda_prep0(unsigned short im_size, int nerve_cent_pix, int nerve_r_pix_2, int vein_r_pix_2, float k_rate_extra, float k_detox_extra,
-	unsigned char* pix_out_of_nerve, float* rate, float* detox)
+	unsigned char* pix_out_of_nerve, unsigned char* rate, float* detox)
 {
 	int x = blockIdx.x * blockDim.x + threadIdx.x;
 	int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -19,10 +24,10 @@ extern "C" __global__  void cuda_prep0(unsigned short im_size, int nerve_cent_pi
 
 		if (!outside)
 		{
-			rate[xy4] = k_rate_extra;
-			rate[xy4 + 1] = k_rate_extra;
-			rate[xy4 + 2] = k_rate_extra;
-			rate[xy4 + 3] = k_rate_extra;
+			rate[xy4] = diff_extra_index;
+			rate[xy4 + 1] = diff_extra_index;
+			rate[xy4 + 2] = diff_extra_index;
+			rate[xy4 + 3] = diff_extra_index;
 
 			detox[xy] = k_detox_extra;
 

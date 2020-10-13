@@ -46,7 +46,8 @@ namespace LHON_Form
         // ====================================
 
         private float[] tox, tox_dev, tox_new_dev; // Tox
-        private float[] rate, rate_dev; // Rate
+        private byte[] rate, rate_dev; // Rate
+        private float[] rate_values, rate_values_dev; // vector of diffusion rate values. rate_value[0]=0; rate[5]=1;
         private float[] detox, detox_dev; // Detox
         private float[] tox_prod, tox_prod_dev; // Tox_prod
         private uint[] axons_cent_pix, axons_cent_pix_dev; // Center pixel of each axon
@@ -66,6 +67,11 @@ namespace LHON_Form
         private int[] num_alive_axons = new int[1], num_alive_axons_dev;
         private bool[] axon_is_init_insult;
         private bool[] axon_is_large; // For display purposes
+
+        private readonly byte diff_live_index = 1;
+        private readonly byte diff_bound_index = 2;
+        private readonly byte diff_dead_index = 3;
+        private readonly byte diff_extra_index = 4;
 
         private ushort im_size;
 
@@ -177,7 +183,14 @@ namespace LHON_Form
             Init_bmp_write();
 
             // ======== Pixel Properties =========
-            rate = new float[im_size * im_size * 4];
+            rate = new byte[im_size * im_size * 4];
+            rate_values = new float[6];
+            rate_values[0] = 0;
+            rate_values[1] = k_rate_live_axon;
+            rate_values[2] = k_rate_boundary;
+            rate_values[3] = k_rate_dead_axon;
+            rate_values[4] = k_rate_extra;
+            rate_values[5] = 1;
             detox = new float[im_size * im_size];
             tox = new float[im_size * im_size];
             tox_prod = new float[im_size * im_size];
@@ -223,7 +236,8 @@ namespace LHON_Form
             localGPUVar.Synchronize();
 
             pix_idx_num = 0;
-            rate_dev = localGPUVar.Allocate<float>(im_size * im_size * 4);
+            rate_dev = localGPUVar.Allocate<byte>(im_size * im_size * 4);
+            
             detox_dev = localGPUVar.Allocate<float>(im_size * im_size);
             pix_idx_dev = localGPUVar.Allocate<int>(im_size * im_size);
             byte[] pix_out_of_nerve_dev = localGPUVar.Allocate<byte>(im_size * im_size);
@@ -233,6 +247,8 @@ namespace LHON_Form
             dim3 block_siz_prep = new dim3(prep_siz, prep_siz);
             int tmp = (int)Math.Ceiling((double)im_size / (double)prep_siz);
             dim3 grid_siz_prep = new dim3(tmp, tmp);
+
+            //localGPUVar.CopyToDevice(rate_values, rate_values_dev);
 
             localGPUVar.Launch(grid_siz_prep, block_siz_prep).cuda_prep0(im_size, nerve_cent_pix, nerve_r_pix_2, vein_r_pix_2, k_rate_extra, k_detox_extra,
                 pix_out_of_nerve_dev, rate_dev, detox_dev);
@@ -345,11 +361,11 @@ namespace LHON_Form
 
                             if (xy_inside != neigh_k_inside)
                             {
-                                rate[lin_idx] = k_rate_boundary;
+                                rate[lin_idx] = diff_bound_index;
                             }
                             else if (xy_inside)
                             {
-                                rate[lin_idx] = k_rate_live_axon;
+                                rate[lin_idx] = diff_live_index;
                                 axons_surr_rate[axons_surr_rate_idx[i + 1]++] = lin_idx;
                             }
                         }
