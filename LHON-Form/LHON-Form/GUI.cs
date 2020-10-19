@@ -355,6 +355,15 @@ namespace LHON_Form
 
             txt_clearance.TextChanged += (s, e) => mdl_clearance = Read_float(s);
 
+            txt_3d_layers.TextChanged += (s, e) => setts.no3dLayers = Read_int(s);
+
+            txt_3d_tox_start.TextChanged += (s, e) => setts.toxLayerStart = Read_int(s);
+
+            txt_3d_tox_stop.TextChanged += (s, e) => setts.toxLayerStart = Read_int(s);
+
+            txt_layer_to_display.TextChanged += (s, e) => setts.layerToDisplay = Read_int(s);
+
+
 
             btn_save_model.Click += (s, e) =>
             {

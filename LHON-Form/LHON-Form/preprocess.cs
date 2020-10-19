@@ -73,6 +73,18 @@ namespace LHON_Form
         private readonly byte diff_dead_index = 3;
         private readonly byte diff_extra_index = 4;
 
+        private readonly uint rateUpLayerIndex = 4;
+        private readonly uint rateDownLayerIndex = 5;
+
+        private readonly int num_slices = 0;
+        private readonly int start_tox_plane = 3;
+        private readonly int stop_tox_plane = 10;
+
+        private readonly uint plane_neighbours = 4;
+        private readonly uint space_neighbours = 6;
+
+        private int rate_dimensions = 4;
+
         private ushort im_size;
 
         // ====================================
@@ -183,7 +195,8 @@ namespace LHON_Form
             Init_bmp_write();
 
             // ======== Pixel Properties =========
-            rate = new byte[im_size * im_size * 4];
+            rate_dimensions += setts.no3dLayers !=0 ? 2 : 0;
+            rate = new byte[im_size * im_size * rate_dimensions];
             rate_values = new float[6];
             rate_values[0] = 0;
             rate_values[1] = k_rate_live_axon;
@@ -236,7 +249,7 @@ namespace LHON_Form
             localGPUVar.Synchronize();
 
             pix_idx_num = 0;
-            rate_dev = localGPUVar.Allocate<byte>(im_size * im_size * 4);
+            rate_dev = localGPUVar.Allocate<byte>(im_size * im_size * rate_dimensions);
             
             detox_dev = localGPUVar.Allocate<float>(im_size * im_size);
             pix_idx_dev = localGPUVar.Allocate<int>(im_size * im_size);
@@ -251,7 +264,7 @@ namespace LHON_Form
             //localGPUVar.CopyToDevice(rate_values, rate_values_dev);
 
             localGPUVar.Launch(grid_siz_prep, block_siz_prep).cuda_prep0(im_size, nerve_cent_pix, nerve_r_pix_2, vein_r_pix_2, k_rate_extra, k_detox_extra,
-                pix_out_of_nerve_dev, rate_dev, detox_dev);
+                pix_out_of_nerve_dev, rate_dev, detox_dev, rate_dimensions);
 
             localGPUVar.Synchronize();
 
@@ -281,6 +294,8 @@ namespace LHON_Form
 
             Func<int, int, uint> xy_to_lin_idx = (x, y) => (uint)x * (uint)im_size + (uint)y;
             Func<uint, uint, uint> xy_to_lin_idx_u = (x, y) => (uint)x * (uint)im_size + (uint)y;
+
+            uint noNeighbours = (setts.no3dLayers == 0) ? plane_neighbours : space_neighbours;
 
             for (int i = 0; i < mdl.n_axons; i++)
             {
@@ -344,6 +359,7 @@ namespace LHON_Form
                 int cnt1 = 0, cnt2 = 0;
 
                 for (int y = box_y_min[i] + 1; y < box_y_max[i]; y++)
+                {
                     for (int x = box_x_min[i] + 1; x < box_x_max[i]; x++)
                     {
                         int x_rel = x - box_x_min[i];
@@ -352,12 +368,14 @@ namespace LHON_Form
                         int[] neighbors_x = new int[] { x_rel + 1, x_rel - 1, x_rel, x_rel };
                         int[] neighbors_y = new int[] { y_rel, y_rel, y_rel + 1, y_rel - 1 };
 
-                        for (uint k = 0; k < 4; k++)
+                        bool xy_inside = is_inside_this_axon[x_rel, y_rel];
+                        uint lin_idx_base = xy_to_lin_idx(x, y) * noNeighbours;
+
+                        for (uint k = 0; k < plane_neighbours; k++)
                         {
-                            bool xy_inside = is_inside_this_axon[x_rel, y_rel];
                             bool neigh_k_inside = is_inside_this_axon[neighbors_x[k], neighbors_y[k]];
 
-                            uint lin_idx = xy_to_lin_idx(x, y) * 4 + k;
+                            uint lin_idx = lin_idx_base + k;
 
                             if (xy_inside != neigh_k_inside)
                             {
@@ -369,7 +387,14 @@ namespace LHON_Form
                                 axons_surr_rate[axons_surr_rate_idx[i + 1]++] = lin_idx;
                             }
                         }
+                        if (xy_inside)
+                        {
+                            rate[lin_idx_base + rateDownLayerIndex] = diff_live_index;
+                            rate[lin_idx_base + rateUpLayerIndex] = diff_live_index;
+                        }
                     }
+                }
+
                 if (cnt1 / 2 != cnt2)
                     Debug.WriteLine("Increase clearance");
                 prep_prof.Time(5);
@@ -378,7 +403,7 @@ namespace LHON_Form
             }
 
             localGPUVar.CopyToDevice(rate, rate_dev);
-            localGPUVar.Launch(grid_siz_prep, block_siz_prep).cuda_prep1(im_size, pix_out_of_nerve_dev, rate_dev);
+            localGPUVar.Launch(grid_siz_prep, block_siz_prep).cuda_prep1(im_size, pix_out_of_nerve_dev, rate_dev, rate_dimensions);
             localGPUVar.CopyFromDevice(rate_dev, rate);
 
             prep_prof.Time(6);

@@ -66,9 +66,6 @@ namespace LHON_Form
             }
             tt_sim.Start();
 
-            rate_values_dev = gpu.Allocate<float>(6);
-            gpu.CopyToDevice(rate_values, rate_values_dev);
-
             while (true)
             {
                 iteration++;
@@ -84,10 +81,21 @@ namespace LHON_Form
                 
                 if (en_prof) { gpu.Synchronize(); alg_prof.Time(1); }
 
-                
-                gpu.Launch(blocks_per_grid_2D_pix, threads_per_block_1D).cuda_diffusion1(pix_idx_dev, pix_idx_num, im_size,
-                    tox_switch ? 1 : 0, tox_dev, detox_dev, tox_prod_dev, rate_dev, rate_values_dev);
-                
+                if(setts.no3dLayers == 0)
+                {
+                    gpu.Launch(blocks_per_grid_2D_pix, threads_per_block_1D).cuda_diffusion1(pix_idx_dev, pix_idx_num, im_size,
+                        tox_switch ? 1 : 0, tox_dev, detox_dev, tox_prod_dev, rate_dev, rate_values_dev, rate_dimensions);
+                }
+                else
+                {
+                    for (int i = 0; i < num_slices; i++)
+                    {
+
+                    }
+                    gpu.Launch(blocks_per_grid_2D_pix, threads_per_block_1D).cuda_diffusion2(pix_idx_dev, pix_idx_num, im_size,
+                                            tox_switch ? 1 : 0, tox_dev, detox_dev, tox_prod_dev, rate_dev, rate_values_dev, rate_dimensions);
+                }
+
 
                 /*
                 gpu.Launch(blocks_per_grid_2D_pix, threads_per_block_1D).cuda_diffusion3(pix_idx_dev, pix_idx_num, im_size,
@@ -232,5 +240,15 @@ namespace LHON_Form
 
         }
 
+        private void label23_Click(object sender, EventArgs e)
+        {
+
+        }
+
+
+        private void label40_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }

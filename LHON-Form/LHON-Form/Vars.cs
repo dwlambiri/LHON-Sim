@@ -72,6 +72,14 @@ namespace LHON_Form
             public float[] insult;
 
             public float insult_tox;
+
+            public int no3dLayers;
+
+            public int toxLayerStart;
+
+            public int toxLayerStop;
+
+            public int layerToDisplay;
         }
 
         private Model mdl = new Model();
