@@ -136,7 +136,7 @@ namespace LHON_Form
                 Save_Progress(ProjectOutputDir + @"Progression\" + DateTime.Now.ToString("yyyy-MM-dd @HH-mm-ss") + ".prgim");
             };
 
-            Append_stat_ln("Welcome to LHON-2D Simulation software!\n");
+            Append_stat_ln("Welcome to LHON-2D/3D Simulation software!\n");
 
             btn_snapshot.Click += (s, e) =>
             {
@@ -157,7 +157,7 @@ namespace LHON_Form
                     insult_r += (float)e.Delta / 100;
                     if (insult_r < 0) insult_r = 0;
                     Update_init_insult();
-                    Update_bmp_image();
+                    Update_bmp_image(0);
                     //Debug.WriteLine(insult_r);
                 }
             };
@@ -170,7 +170,15 @@ namespace LHON_Form
             show_opts[1] = chk_show_tox.Checked;
 
             gpu.CopyToDevice(show_opts, show_opts_dev);
-            Update_bmp_image();
+            int layerToDisplay = 0;
+
+            if (setts.no3dLayers != 0)
+            {
+                layerToDisplay = Mod(headLayer + setts.layerToDisplay, setts.layerToDisplay + 2);
+            }
+
+            Update_bmp_image(layerToDisplay);
+            //Update_bmp_image(0);
         }
 
         // ====================================================================
@@ -359,11 +367,20 @@ namespace LHON_Form
 
             txt_3d_tox_start.TextChanged += (s, e) => setts.toxLayerStart = Read_int(s);
 
-            txt_3d_tox_stop.TextChanged += (s, e) => setts.toxLayerStart = Read_int(s);
+            txt_3d_tox_stop.TextChanged += (s, e) => setts.toxLayerStop = Read_int(s);
 
             txt_layer_to_display.TextChanged += (s, e) => setts.layerToDisplay = Read_int(s);
 
+            if(setts.layerToDisplay >= (2+setts.no3dLayers))
+            {
+                Append_stat_ln("Warning: will display layer no " + (setts.layerToDisplay % (2 + setts.no3dLayers)).ToString() + " *not* layer " + (setts.layerToDisplay).ToString());
+                setts.layerToDisplay = setts.layerToDisplay % (2 + setts.no3dLayers);
+            }
 
+            if(setts.layerToDisplay < 0)
+            {
+                setts.layerToDisplay = 0;
+            }
 
             btn_save_model.Click += (s, e) =>
             {

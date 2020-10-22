@@ -6,7 +6,7 @@
 
 extern "C" __global__  void cuda_update_live(int n_axons, float* tox, unsigned char* rate, float* detox, float* tox_prod, float on_death_tox, float k_detox_extra, float death_tox_thres,
 	unsigned int * axons_cent_pix, unsigned int* axons_inside_pix, unsigned int* axons_inside_pix_idx, unsigned int* axon_surr_rate, unsigned int* axon_surr_rate_idx,
-	bool* axon_is_alive, unsigned char* axon_mask, int* num_alive_axons, int* death_itr, int iteration)
+	bool* axon_is_alive, unsigned char* axon_mask, int* num_alive_axons, int* death_itr, int iteration, int offset)
 {
 	int n = threadIdx.x + blockIdx.x * blockDim.x;
 
@@ -19,7 +19,7 @@ extern "C" __global__  void cuda_update_live(int n_axons, float* tox, unsigned c
 				int idx = axons_inside_pix[p];
 
 				detox[idx] = k_detox_extra;
-				tox[idx] += on_death_tox;
+				tox[offset+idx] += on_death_tox;
 				tox_prod[idx] = 0;
 				axon_mask[idx] = 2; // dead
 			}

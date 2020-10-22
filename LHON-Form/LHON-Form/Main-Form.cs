@@ -48,6 +48,16 @@ namespace LHON_Form
         private int stop_sim_at_duration_of_no_change = 2000; // itr
 
         private bool tox_switch = false;
+        private int dstl = 0;
+        private int tl = 0;
+        private int ml = 0;
+        private int bl = 0;
+
+        private int Mod(int x, int m)
+        {
+            int r = x % m;
+            return r < 0 ? r + m : r;
+        }
 
         unsafe private void Run_Alg_GPU()
         {
@@ -65,6 +75,10 @@ namespace LHON_Form
                 gui_iteration_period = Read_int(txt_rec_inerval);
             }
             tt_sim.Start();
+            
+            headLayer = 2;
+            int layerToDisplay = setts.layerToDisplay % (2 + setts.no3dLayers);
+            int totalPlanes = setts.no3dLayers + 2;
 
             while (true)
             {
@@ -74,12 +88,20 @@ namespace LHON_Form
                 bool update_gui = iteration % gui_iteration_period == 0;
 
                 alg_prof.Time(-1);
+
+                int offset = 0;
+                if(setts.no3dLayers != 0)
+                {
+                    offset = headLayer * im_size * im_size;
+                }
                 
                 gpu.Launch(blocks_per_grid_1D_axons, threads_per_block_1D).cuda_update_live(mdl.n_axons, tox_dev, rate_dev, detox_dev, tox_prod_dev, on_death_tox, k_detox_extra, death_tox_thres,
                     axons_cent_pix_dev, axons_inside_pix_dev, axons_inside_pix_idx_dev, axon_surr_rate_dev, axon_surr_rate_idx_dev,
-                    axon_is_alive_dev, axon_mask_dev, num_alive_axons_dev, death_itr_dev, iteration);
+                    axon_is_alive_dev, axon_mask_dev, num_alive_axons_dev, death_itr_dev, iteration, offset);
                 
                 if (en_prof) { gpu.Synchronize(); alg_prof.Time(1); }
+
+                
 
                 if(setts.no3dLayers == 0)
                 {
@@ -88,12 +110,48 @@ namespace LHON_Form
                 }
                 else
                 {
-                    for (int i = 0; i < num_slices; i++)
-                    {
+                    dstl = Mod(headLayer - 2, totalPlanes);
+                    tl = Mod(headLayer, totalPlanes);
+                    ml = Mod(headLayer, totalPlanes);
+                    bl = Mod(headLayer+1, totalPlanes);
 
-                    }
+                    bool injury = setts.toxLayerStart == 0;
+
                     gpu.Launch(blocks_per_grid_2D_pix, threads_per_block_1D).cuda_diffusion2(pix_idx_dev, pix_idx_num, im_size,
-                                            tox_switch ? 1 : 0, tox_dev, detox_dev, tox_prod_dev, rate_dev, rate_values_dev, rate_dimensions);
+                                            tox_dev, detox_dev, tox_prod_dev, rate_dev, rate_values_dev, rate_dimensions,
+                                            dstl, tl, ml, bl, 1, 0, injury ? 1 : 0);
+
+                    for (int j = 1; j < setts.no3dLayers-1; j++)
+                    {
+                        dstl = Mod(headLayer - 2 + j, totalPlanes);
+                        tl   = Mod(headLayer - 1 + j, totalPlanes);
+                        ml   = Mod(headLayer + j, totalPlanes);
+                        bl   = Mod(headLayer + j + 1, totalPlanes);
+                        injury = (j >= setts.toxLayerStart) && (j <= setts.toxLayerStop);
+                        gpu.Launch(blocks_per_grid_2D_pix, threads_per_block_1D).cuda_diffusion2(pix_idx_dev, pix_idx_num, im_size,
+                                            tox_dev, detox_dev, tox_prod_dev, rate_dev, rate_values_dev, rate_dimensions,
+                                            dstl, tl, ml, bl, 0, 0, injury ? 1 : 0);
+                    }
+
+                    dstl = Mod(headLayer - 2 + setts.no3dLayers - 1, totalPlanes);
+                    tl   = Mod(headLayer - 1 + setts.no3dLayers - 1, totalPlanes);
+                    ml   = Mod(headLayer   + setts.no3dLayers - 1, totalPlanes);
+                    bl   = Mod(headLayer   + setts.no3dLayers - 1, totalPlanes);
+                    injury = (setts.no3dLayers - 1 <= setts.toxLayerStop);
+                    gpu.Launch(blocks_per_grid_2D_pix, threads_per_block_1D).cuda_diffusion2(pix_idx_dev, pix_idx_num, im_size,
+                                            tox_dev, detox_dev, tox_prod_dev, rate_dev, rate_values_dev, rate_dimensions,
+                                            dstl, tl, ml, bl, 0, 1, injury ? 1 : 0);
+
+                    headLayer = Mod(headLayer - 2, totalPlanes);
+                    if (setts.no3dLayers < 0)
+                    {
+                        Debug.WriteLine("ERROR: no layers is less than zero!");
+                    }
+                    if(headLayer < 0)
+                    {
+                        Debug.WriteLine("ERROR: headLayer is less than zero!");
+                    }
+                    
                 }
 
 
@@ -116,7 +174,15 @@ namespace LHON_Form
 
                     // Calc tox_sum for sanity check
                     gpu.Set(sum_tox_dev);
-                    gpu.Launch(blocks_per_grid_2D_pix, threads_per_block_1D).cuda_tox_sum(pix_idx_dev, pix_idx_num, tox_dev, sum_tox_dev);
+                    if (setts.no3dLayers != 0)
+                    {
+                        offset = headLayer * im_size * im_size;
+                    }
+                    else
+                    {
+                        offset = 0;
+                    }
+                    gpu.Launch(blocks_per_grid_2D_pix, threads_per_block_1D).cuda_tox_sum(pix_idx_dev, pix_idx_num, tox_dev, sum_tox_dev, offset);
                     gpu.CopyFromDevice(sum_tox_dev, out sum_tox);
 
                     if ((stop_at_iteration == 0) && Math.Abs(sum_tox - lvl_tox_last) < 1000F) { 
@@ -143,7 +209,12 @@ namespace LHON_Form
 
                     if (en_prof) { gpu.Synchronize(); alg_prof.Time(3); }
 
-                    Update_bmp_image();
+                    if (setts.no3dLayers != 0)
+                    {
+                        layerToDisplay = Mod(headLayer  + setts.layerToDisplay, totalPlanes);
+                    }
+
+                    Update_bmp_image(layerToDisplay);
 
                     if (sim_stat == Sim_stat_enum.Running && chk_rec_avi.Checked)
                         Record_bmp_gif();
@@ -163,6 +234,8 @@ namespace LHON_Form
 
             if (en_prof) alg_prof.report();
             else Debug.WriteLine("Sim took " + (Toc() / 1000).ToString("0.000") + " secs\n");
+
+            simulationDone = true;
         }
 
 
@@ -207,7 +280,7 @@ namespace LHON_Form
                 Update_show_opts();
 
                 Update_init_insult();
-                Update_bmp_image();
+                Update_bmp_image(0);
                 PicB_Resize(null, null);
 
                 sim_stat = Sim_stat_enum.None;

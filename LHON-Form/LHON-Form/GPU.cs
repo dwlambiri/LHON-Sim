@@ -61,8 +61,8 @@ namespace LHON_Form
 
             gpuLocal.FreeAll(); gpuLocal.Synchronize();
 
-            tox_dev = gpuLocal.Allocate<float>((2+num_slices)*im_size*im_size); gpuLocal.Set(tox_dev); gpuLocal.CopyToDevice(tox, 0, tox_dev, 0, tox.Length);
-            tox_new_dev = gpuLocal.Allocate<float>(im_size * im_size); gpuLocal.Set(tox_new_dev);
+            tox_dev = gpuLocal.Allocate<float>((2+ setts.no3dLayers)*im_size*im_size); gpuLocal.Set(tox_dev); gpuLocal.CopyToDevice(tox, 0, tox_dev, 0, tox.Length);
+            //tox_new_dev = gpuLocal.Allocate<float>(im_size * im_size); gpuLocal.Set(tox_new_dev);
 
             rate_dev = gpuLocal.Allocate(rate); gpuLocal.CopyToDevice(rate, rate_dev);
             rate_values_dev = gpu.Allocate(rate_values); gpu.CopyToDevice(rate_values, rate_values_dev);
