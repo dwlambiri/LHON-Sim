@@ -68,6 +68,7 @@ namespace LHON_Form
             public float detox_extra;
 
             public float death_tox_thres;
+            public float death_var_thr;
 
             public float[] insult;
 

@@ -72,6 +72,8 @@ namespace LHON_Form
             axons_cent_pix_dev = gpuLocal.Allocate(axons_cent_pix); gpuLocal.CopyToDevice(axons_cent_pix, axons_cent_pix_dev);
             id_center_axon_dev = gpuLocal.Allocate(id_center_axon); gpuLocal.CopyToDevice(id_center_axon, id_center_axon_dev);
             axon_is_alive_dev = gpuLocal.Allocate(axon_is_alive); gpuLocal.CopyToDevice(axon_is_alive, axon_is_alive_dev);
+            //[DWL] added this
+            death_thr_array_dev = gpuLocal.Allocate(death_thr_array); gpuLocal.CopyToDevice(death_thr_array, death_thr_array_dev);
 
             pix_idx_dev = gpuLocal.Allocate(pix_idx); gpuLocal.CopyToDevice(pix_idx, pix_idx_dev);
 

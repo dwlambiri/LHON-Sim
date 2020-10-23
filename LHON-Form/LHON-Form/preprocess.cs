@@ -37,7 +37,7 @@ namespace LHON_Form
             Value zmol / um^2  = (Value / spatialRes ^ 2)  zmol / pix
         */
 
-        private float k_detox_intra, k_detox_extra, k_tox_prod, death_tox_thres, insult_tox, on_death_tox,
+        private float k_detox_intra, k_detox_extra, k_tox_prod, death_tox_thres, death_var_thr, insult_tox, on_death_tox,
             k_rate_live_axon, k_rate_boundary, k_rate_dead_axon, k_rate_extra;
 
 
@@ -45,11 +45,12 @@ namespace LHON_Form
         //              Variables
         // ====================================
 
-        private float[] tox, tox_dev, tox_new_dev; // Tox
+        private float[] tox, tox_dev; // Tox
         private byte[] rate, rate_dev; // Rate
         private float[] rate_values, rate_values_dev; // vector of diffusion rate values. rate_value[0]=0; rate[5]=1;
         private float[] detox, detox_dev; // Detox
         private float[] tox_prod, tox_prod_dev; // Tox_prod
+        private float[] death_thr_array, death_thr_array_dev; // [DWL] death threshold for each axon; either constant or dependent on location in optic nerve
         private uint[] axons_cent_pix, axons_cent_pix_dev; // Center pixel of each axon
         private uint[] axons_inside_pix, axons_inside_pix_dev; // 1D array for all axons
         private uint[] axons_inside_pix_idx, axons_inside_pix_idx_dev; // indices for the above 1D array
@@ -76,16 +77,17 @@ namespace LHON_Form
         private readonly uint rateUpLayerIndex = 4;
         private readonly uint rateDownLayerIndex = 5;
 
-        private readonly int num_slices = 0;
-        private readonly int start_tox_plane = 3;
-        private readonly int stop_tox_plane = 10;
-
+        
         private readonly uint plane_neighbours = 4;
         private readonly uint space_neighbours = 6;
 
         private int rate_dimensions = 4;
 
         private ushort im_size;
+        private bool preprocessDone = false;
+        private bool simulationDone = false;
+
+        private int headLayer = 2;
 
         // ====================================
         //        Model Preprocessing
@@ -164,7 +166,9 @@ namespace LHON_Form
             }
 
             // 
+            bool variableDeathThreshold = chk_var_thr.Checked;
             death_tox_thres = setts.death_tox_thres / Pow2(res);
+            death_var_thr = setts.death_var_thr;
             insult_tox = setts.insult_tox / Pow2(res);
             on_death_tox = setts.on_death_tox / Pow2(res);
 
@@ -181,8 +185,6 @@ namespace LHON_Form
             {
                 Append_stat_ln("Info: All axons will die...");
             }
-            
-
 
             prep_prof.Time(0);
             Tic();
@@ -216,6 +218,8 @@ namespace LHON_Form
             // ======== Axon Properties =========
 
             axons_cent_pix = new uint[mdl.n_axons];
+            death_thr_array = new float[mdl.n_axons];
+
             axon_is_alive = axon_is_alive_init = Enumerable.Repeat(true, mdl.n_axons).ToArray(); // init to true
 
             // temp variable
@@ -321,6 +325,16 @@ namespace LHON_Form
                 box_x_max[i] = Min((int)(xCenter + rc_1), im_size - 1);
                 box_siz_x[i] = box_y_max[i] - box_y_min[i] + 2;
                 box_siz_y[i] = box_x_max[i] - box_x_min[i] + 2;
+
+                if(variableDeathThreshold == false)
+                {
+                    death_thr_array[i] = death_tox_thres;
+                }
+                else
+                {
+                    death_thr_array[i] = death_tox_thres* (1 + death_var_thr * xCenter / im_size);
+                }
+                
             }
             prep_prof.Time(3);
 
@@ -424,6 +438,9 @@ namespace LHON_Form
 
             Update_bottom_stat("Preprocess Done! (" + (Toc() / 1000).ToString("0.0") + " secs)");
             // Debug.WriteLine("inside: {0} vs allocated {1}", axons_inside_pix_idx[mdl.n_axons - 1], axons_inside_pix.Length);
+
+            preprocessDone = true;
+            simulationDone = false;
 
             prep_prof.report();
         }

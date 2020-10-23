@@ -358,6 +358,7 @@ namespace LHON_Form
             txt_rate_live.TextChanged += (s, e) => setts.rate_live = Read_float(s);
             txt_tox_prod_rate.TextChanged += (s, e) => setts.tox_prod = Read_float(s);
             txt_death_tox_threshold.TextChanged += (s, e) => setts.death_tox_thres = Read_float(s);
+            txt_var_death.TextChanged += (s, e) => setts.death_var_thr = Read_float(s);
             txt_insult_tox.TextChanged += (s, e) => setts.insult_tox = Read_float(s);
             txt_on_death_tox.TextChanged += (s, e) => setts.on_death_tox = Read_float(s);
 
