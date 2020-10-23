@@ -278,8 +278,8 @@ namespace LHON_Form
             {
                 float now = tt_sim.Read();
                 lbl_itr.Text = iteration.ToString("0");
-                lbl_tox.Text = (sum_tox / 1000).ToString("0.00") + " aMol";
-                lbl_max_tox.Text = (max_sum_tox / 1000).ToString("0.00") + " aMol";
+                lbl_tox.Text = (sum_tox / 1000).ToString("000.00") + " aMol";
+                lbl_max_tox.Text = (max_sum_tox / 1000).ToString("000.00") + " aMol";
                 // [DWL] zMol*32g/Mol/area (um^2)/height (um)
                 // 32*tox*10^-21 g / (pi*r^2) / 10^-12 / (1/res) /10^-6 = 32*tox*10^-21*10^18*res/(pi*r^2) g/m^3
                 // 32*tox*10^-3*res/(pi*r^2) g/m^3 = 32*tox*res/(pi*r^2) mg / m^3
@@ -294,8 +294,8 @@ namespace LHON_Form
                 // thr < UpperLimit/32*10^3/res ~ 220 / resolution
                 // thr+onDeath < UpperLimit/32*10^3/res ~ 220/ resolution
                 // dead diam < 4*prod/(scav*thr)
-                lbl_max_density.Text = (max_sum_tox * 32 / 1000/ Pow2(mdl_nerve_r) / 3.1415 * setts.resolution).ToString("0.00");  //  in g/m^3 => max should not be over 35
-                lbl_density.Text = (sum_tox * 32 / 1000 / Pow2(mdl_nerve_r) / 3.1415 * setts.resolution).ToString("0.00"); //  in g/m^3 => max should not be over 35
+                lbl_max_density.Text = (max_sum_tox * 32 / 1000/ Pow2(mdl_nerve_r) / 3.1415 * setts.resolution).ToString("0.00") + " g/m3";  //  in g/m^3 => max should not be over 35
+                lbl_density.Text = (sum_tox * 32 / 1000 / Pow2(mdl_nerve_r) / 3.1415 * setts.resolution).ToString("0.00") + " g/m3"; //  in g/m^3 => max should not be over 35
                 lbl_alive_axons_perc.Text = ((float)num_alive_axons[0] * 100 / mdl.n_axons).ToString("0.0") + "%";
                 var span = TimeSpan.FromSeconds(now / 1000);
                 lbl_sim_time.Text = string.Format("{0:00}:{1:00}:{2:00}", span.Minutes, span.Seconds, span.Milliseconds);
