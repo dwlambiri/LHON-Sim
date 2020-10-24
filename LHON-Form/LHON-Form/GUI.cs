@@ -278,8 +278,8 @@ namespace LHON_Form
             {
                 float now = tt_sim.Read();
                 lbl_itr.Text = iteration.ToString("0");
-                lbl_tox.Text = (sum_tox / 1000).ToString("000.00") + " aMol";
-                lbl_max_tox.Text = (max_sum_tox / 1000).ToString("000.00") + " aMol";
+                lbl_tox.Text = (sum_tox / 1000).ToString("0.0") + " aMol";
+                lbl_max_tox.Text = (max_sum_tox / 1000).ToString("0.0") + " aMol";
                 // [DWL] zMol*32g/Mol/area (um^2)/height (um)
                 // 32*tox*10^-21 g / (pi*r^2) / 10^-12 / (1/res) /10^-6 = 32*tox*10^-21*10^18*res/(pi*r^2) g/m^3
                 // 32*tox*10^-3*res/(pi*r^2) g/m^3 = 32*tox*res/(pi*r^2) mg / m^3
@@ -468,6 +468,11 @@ namespace LHON_Form
             txt_death_tox_threshold.Text = setts.death_tox_thres.ToString();
             txt_insult_tox.Text = setts.insult_tox.ToString();
             txt_on_death_tox.Text = setts.on_death_tox.ToString();
+
+            txt_3d_layers.Text = setts.no3dLayers.ToString();
+            txt_3d_tox_start.Text = setts.toxLayerStart.ToString();
+            txt_3d_tox_stop.Text = setts.toxLayerStop.ToString();
+            txt_var_death.Text = setts.death_var_thr.ToString();
 
             txt_clearance.Text = mdl_clearance.ToString();
 

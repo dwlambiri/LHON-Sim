@@ -179,11 +179,11 @@ namespace LHON_Form
 
             if(setts.detox_intra != 0 && setts.death_tox_thres != 0)
             {
-                Append_stat_ln("Info: Axons with diameter under " + (4 * setts.tox_prod *(1-setts.detox_intra)/ setts.detox_intra / setts.death_tox_thres).ToString() +" um will die");
+               // Append_stat_ln("Info: Axons with diameter under " + (4 * setts.tox_prod *(1-setts.detox_intra)/ setts.detox_intra / setts.death_tox_thres).ToString() +" um will die");
             }
             else
             {
-                Append_stat_ln("Info: All axons will die...");
+                // Append_stat_ln("Info: All axons will die...");
             }
 
             prep_prof.Time(0);

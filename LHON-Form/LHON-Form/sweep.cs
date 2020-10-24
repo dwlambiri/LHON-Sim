@@ -29,11 +29,16 @@ namespace LHON_Form
 
             "Resolution",
 
+            "3D Layers",
+            "3D SOX Start",
+            "3D SOX End",
+
             "Live Rate",
             "Boundary Rate",
             "Extra & Dead Rate",
             "All Rates",
             "Death Thr",
+            "Var Death Thr",
             "Tox Prod",
             "On Death",
 
@@ -271,6 +276,18 @@ namespace LHON_Form
                     break;
                 case "Insult R":
                     setts.insult[2] = val;
+                    break;
+                case "3D Layers":
+                    setts.no3dLayers = (int)val;
+                    break;
+                case "3D SOX Start":
+                    setts.toxLayerStart = (int)val;
+                    break;
+                case "3D SOX End":
+                    setts.toxLayerStop = (int)val;
+                    break;
+                case "Var Death Thr":
+                    setts.death_var_thr = val;
                     break;
             }
             return val;
