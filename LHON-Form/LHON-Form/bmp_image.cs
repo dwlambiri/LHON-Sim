@@ -20,8 +20,8 @@ namespace LHON_Form
         private byte[,,] bmp_bytes, bmp_bytes_dev;
         private byte[,] init_insult_mask_dev;
         private float bmp_image_compression_ratio;
-        private bool[] show_opts = new bool[2];
-        private bool[] show_opts_dev = new bool[2];
+        private bool[] show_opts = new bool[3];
+        private bool[] show_opts_dev = new bool[3];
         private int blocks_per_grid_bmp;
         private dim3 update_bmp_gride_size_2D, update_bmp_block_size_2D;
 

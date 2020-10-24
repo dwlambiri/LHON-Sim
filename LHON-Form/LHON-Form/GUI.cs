@@ -45,8 +45,11 @@ namespace LHON_Form
 
             Init_sweep();
 
-            chk_show_axons.CheckedChanged += (o, e) => Update_show_opts();
+            chk_show_live_axons.CheckedChanged += (o, e) => Update_show_opts();
+            chk_show_dead_axons.CheckedChanged += (o, e) => Update_show_opts();
             chk_show_tox.CheckedChanged += (o, e) => Update_show_opts();
+            txt_layer_to_display.TextChanged += (s, e) => Update_show_opts();
+
 
             txt_stop_itr.TextChanged += (s, e) => stop_at_iteration = Read_int(s);
             txt_stop_time.TextChanged += (s, e) => stop_at_time = Read_float(s);
@@ -166,8 +169,9 @@ namespace LHON_Form
 
         private void Update_show_opts()
         {
-            show_opts[0] = chk_show_axons.Checked;
-            show_opts[1] = chk_show_tox.Checked;
+            show_opts[0] = chk_show_live_axons.Checked;
+            show_opts[1] = chk_show_dead_axons.Checked;
+            show_opts[2] = chk_show_tox.Checked;
 
             gpu.CopyToDevice(show_opts, show_opts_dev);
             int layerToDisplay = 0;

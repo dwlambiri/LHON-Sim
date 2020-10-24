@@ -329,5 +329,14 @@ namespace LHON_Form
 
         }
 
+        private void label13_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void txt_delay_ms_TextChanged(object sender, EventArgs e)
+        {
+
+        }
     }
 }

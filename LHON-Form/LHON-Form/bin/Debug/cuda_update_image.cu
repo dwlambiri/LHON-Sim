@@ -19,14 +19,26 @@ extern "C" __global__  void cuda_update_image(unsigned short im_size, unsigned s
 		if (init_insult_mask[xy_bmp]) {blue = green = 127; red = 0;}
 		else
 		{
-			if (show_opts[0]){
+			if (show_opts[0] && show_opts[1]){
 				if (axon_mask[xy] == 1) { green = 100; } // live
 				if (axon_mask[xy] == 2) { blue = 255; green = 0; } // dead
 				// else: the pixel doesn't belongs to any axon
 			}
-			else {blue = green = 0;}
+			else if(show_opts[0]) {
+				if (axon_mask[xy] == 1) { green = 100; } // live
+				if (axon_mask[xy] == 2) { green = 0; } // dead
+				blue = 0;
+			}
+			else if (show_opts[1]) {
+				if (axon_mask[xy] == 1) { blue = 0; } // live
+				if (axon_mask[xy] == 2) { blue = 255; } // dead
+				green = 0;
+			}
+			else {
+				blue = green = 0;
+			}
 		
-			if (show_opts[1]){
+			if (show_opts[2]){
 				red = normalized_toxin;
 				// green = 255 - normalized_toxin;
 			}
