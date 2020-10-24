@@ -172,6 +172,13 @@ namespace LHON_Form
             show_opts[0] = chk_show_live_axons.Checked;
             show_opts[1] = chk_show_dead_axons.Checked;
             show_opts[2] = chk_show_tox.Checked;
+            setts.layerToDisplay = Read_int(txt_layer_to_display);
+
+            if (setts.layerToDisplay >= (2 + setts.no3dLayers) || setts.layerToDisplay < 0)
+            {
+                Append_stat_ln("Warning: will display layer no " + Mod(setts.layerToDisplay, 2 + setts.no3dLayers).ToString() + " *not* layer " + (setts.layerToDisplay).ToString());
+                setts.layerToDisplay = Mod(setts.layerToDisplay, 2 + setts.no3dLayers);
+            }
 
             gpu.CopyToDevice(show_opts, show_opts_dev);
             int layerToDisplay = 0;
@@ -376,15 +383,10 @@ namespace LHON_Form
 
             txt_layer_to_display.TextChanged += (s, e) => setts.layerToDisplay = Read_int(s);
 
-            if(setts.layerToDisplay >= (2+setts.no3dLayers))
+            if(setts.layerToDisplay >= (2+setts.no3dLayers) || setts.layerToDisplay < 0)
             {
-                Append_stat_ln("Warning: will display layer no " + (setts.layerToDisplay % (2 + setts.no3dLayers)).ToString() + " *not* layer " + (setts.layerToDisplay).ToString());
-                setts.layerToDisplay = setts.layerToDisplay % (2 + setts.no3dLayers);
-            }
-
-            if(setts.layerToDisplay < 0)
-            {
-                setts.layerToDisplay = 0;
+                Append_stat_ln("Warning: will display layer no " + Mod(setts.layerToDisplay, 2 + setts.no3dLayers).ToString() + " *not* layer " + (setts.layerToDisplay).ToString());
+                setts.layerToDisplay = Mod(setts.layerToDisplay, 2 + setts.no3dLayers);
             }
 
             btn_save_model.Click += (s, e) =>
