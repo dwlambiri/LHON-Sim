@@ -77,7 +77,7 @@ namespace LHON_Form
             tt_sim.Start();
             
             headLayer = 2;
-            int layerToDisplay = setts.layerToDisplay % (2 + setts.no3dLayers);
+            int layerToDisplay = Mod(setts.layerToDisplay , 2 + setts.no3dLayers);
             int totalPlanes = setts.no3dLayers + 2;
 
             while (true)

@@ -174,7 +174,7 @@ namespace LHON_Form
 
             if (setts.no3dLayers != 0)
             {
-                layerToDisplay = Mod(headLayer + setts.layerToDisplay, setts.layerToDisplay + 2);
+                layerToDisplay = Mod(headLayer + setts.layerToDisplay, setts.no3dLayers + 2);
             }
 
             Update_bmp_image(layerToDisplay);
