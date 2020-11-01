@@ -47,7 +47,26 @@ namespace LHON_Form
 
             chk_show_live_axons.CheckedChanged += (o, e) => Update_show_opts();
             chk_show_dead_axons.CheckedChanged += (o, e) => Update_show_opts();
-            chk_show_tox.CheckedChanged += (o, e) => Update_show_opts();
+            chk_show_tox.CheckedChanged += (o, e) =>
+            {
+                    if (chk_show_tox.Checked == true)
+                    {
+                        direction_group_box.Enabled = true;
+                        if (xy_direction_button.Checked) sox_track_bar_xy.Enabled = true;
+                        if (yz_direction_button.Checked) sox_track_bar_yz.Enabled = true;
+                        if (xz_direction_button.Checked) sox_track_bar_xz.Enabled = true;
+                    }
+                    else
+                    {
+                        direction_group_box.Enabled = false;
+                        sox_track_bar_xz.Enabled = false;
+                        sox_track_bar_xy.Enabled = false;
+                        sox_track_bar_yz.Enabled = false;
+                    }
+
+                Update_show_opts();
+
+            };
             txt_layer_to_display.TextChanged += (s, e) => Update_show_opts();
 
 
@@ -152,16 +171,18 @@ namespace LHON_Form
 
             picB.MouseWheel += (s, e) =>
             {
-                float[] um = get_mouse_click_um(e);
-                float dx = insult_x - um[0], dy = insult_y - um[1];
-                float dist = dx * dx + dy * dy;
-                if (insult_r * insult_r - dist > 0 || dist < 100)
-                {
-                    insult_r += (float)e.Delta / 100;
-                    if (insult_r < 0) insult_r = 0;
-                    Update_init_insult();
-                    Update_bmp_image(0);
-                    //Debug.WriteLine(insult_r);
+                if (simInProgress == false) {
+                    float[] um = get_mouse_click_um(e);
+                    float dx = insult_x - um[0], dy = insult_y - um[1];
+                    float dist = dx * dx + dy * dy;
+                    if (insult_r * insult_r - dist > 0 || dist < 100)
+                    {
+                        insult_r += (float)e.Delta / 100;
+                        if (insult_r < 0) insult_r = 0;
+                        Update_init_insult();
+                        Update_bmp_image(0, 0, im_size * im_size);
+                        //Debug.WriteLine(insult_r);
+                    }
                 }
             };
             picB.Click += (s, e) => mouse_click(e as MouseEventArgs);
@@ -169,26 +190,41 @@ namespace LHON_Form
 
         private void Update_show_opts()
         {
+
+            if(preprocessDone == false)
+            {
+                return;
+            }
             show_opts[0] = chk_show_live_axons.Checked;
             show_opts[1] = chk_show_dead_axons.Checked;
             show_opts[2] = chk_show_tox.Checked;
-            setts.layerToDisplay = Read_int(txt_layer_to_display);
-
-            if (setts.layerToDisplay >= (2 + setts.no3dLayers) || setts.layerToDisplay < 0)
-            {
-                Append_stat_ln("Warning: will display layer no " + Mod(setts.layerToDisplay, 2 + setts.no3dLayers).ToString() + " *not* layer " + (setts.layerToDisplay).ToString());
-                setts.layerToDisplay = Mod(setts.layerToDisplay, 2 + setts.no3dLayers);
-            }
+            //setts.layerToDisplay = Read_int(txt_layer_to_display);
 
             gpu.CopyToDevice(show_opts, show_opts_dev);
             int layerToDisplay = 0;
-
+            int currentShow = showdir;
             if (setts.no3dLayers != 0)
             {
-                layerToDisplay = Mod(headLayer + setts.layerToDisplay, setts.no3dLayers + 2);
+                if (showdir == 0)
+                {
+                    if (setts.layerToDisplay >= setts.no3dLayers || setts.layerToDisplay < 0)
+                    {
+                        Append_stat_ln("Warning: will display layer no " + Mod(setts.layerToDisplay, setts.no3dLayers).ToString() + " *not* layer " + (setts.layerToDisplay).ToString());
+                        setts.layerToDisplay = Mod(setts.layerToDisplay, setts.no3dLayers);
+                    }
+                    layerToDisplay = Mod(headLayer + setts.layerToDisplay, setts.no3dLayers );
+                }
+                else
+                {
+                    layerToDisplay = setts.layerToDisplay;
+                }
+            }
+            else
+            {
+                currentShow = 0;
             }
 
-            Update_bmp_image(layerToDisplay);
+            Update_bmp_image(currentShow, layerToDisplay, im_size* im_size);
             //Update_bmp_image(0);
         }
 
@@ -289,11 +325,9 @@ namespace LHON_Form
             {
                 float now = tt_sim.Read();
                 lbl_itr.Text = iteration.ToString("0");
-                lbl_tox.Text = (sum_tox / 1000).ToString("0.0") + " aMol";
-                lbl_max_tox.Text = (max_sum_tox / 1000).ToString("0.0") + " aMol";
-                // [DWL] zMol*32g/Mol/area (um^2)/height (um)
-                // 32*tox*10^-21 g / (pi*r^2) / 10^-12 / (1/res) /10^-6 = 32*tox*10^-21*10^18*res/(pi*r^2) g/m^3
-                // 32*tox*10^-3*res/(pi*r^2) g/m^3 = 32*tox*res/(pi*r^2) mg / m^3
+                lbl_tox.Text = (sum_tox / 1000).ToString("0.0") + " zMol";
+                lbl_max_tox.Text = (max_sum_tox / 1000).ToString("0.0") + " zMol";
+                // [DWL] yMol/area/height yM/V
                 // OXYGEN: 5L of molecular oxygen in body
                 //         5L / 0.1 m^3 = 50L / m^3
                 //         1 mol ~ 22.4 L => 1L ~ 1/22.4 mol
@@ -301,12 +335,13 @@ namespace LHON_Form
                 //         density = 50/22.4 mol/m^3 = 32*50/22.4 mol/m^3 = 71.4 g/m^4
                 //         SOX has to be x percent of the overall density to a max of 100%
                 //         possible SOX upper limit  < 10% => 7 g / m^3 = 7000 mg / m^3
-                // DeathThr / Volume = the zmol*res/um^3 = thr*32*10^-21*res*10^18= thr*32*res*10^-3 g/m^3 < UpperLimit
+                // DeathThr / Volume = the ymol*res/um^3 = thr*10^-24*res*10^18= thr*res mM/L < UpperLimit
                 // thr < UpperLimit/32*10^3/res ~ 220 / resolution
                 // thr+onDeath < UpperLimit/32*10^3/res ~ 220/ resolution
                 // dead diam < 4*prod/(scav*thr)
-                lbl_max_density.Text = (max_sum_tox * 32 / 1000/ Pow2(mdl_nerve_r) / 3.1415 * setts.resolution).ToString("0.00") + " g/m3";  //  in g/m^3 => max should not be over 35
-                lbl_density.Text = (sum_tox * 32 / 1000 / Pow2(mdl_nerve_r) / 3.1415 * setts.resolution).ToString("0.00") + " g/m3"; //  in g/m^3 => max should not be over 35
+                //Append_stat_ln(" mdl_nerve_r " + mdl_nerve_r + " resolution " + setts.resolution);
+                lbl_max_density.Text = (max_sum_tox/ (Pow2(mdl_nerve_r) * 3.1415 * (setts.no3dLayers+1)/ setts.resolution )).ToString("0.00") + " mM/L";  //  in mMol/l => max should not be over 35
+                lbl_density.Text = (sum_tox  / (Pow2(mdl_nerve_r) * 3.1415 * (setts.no3dLayers + 1)/ setts.resolution )).ToString("0.00") + " mM/L"; //  in mMol/l => max should not be over 35
                 lbl_alive_axons_perc.Text = ((float)num_alive_axons[0] * 100 / mdl.n_axons).ToString("0.0") + "%";
                 var span = TimeSpan.FromSeconds(now / 1000);
                 lbl_sim_time.Text = string.Format("{0:00}:{1:00}:{2:00}", span.Minutes, span.Seconds, span.Milliseconds);
@@ -375,19 +410,204 @@ namespace LHON_Form
 
             txt_clearance.TextChanged += (s, e) => mdl_clearance = Read_float(s);
 
-            txt_3d_layers.TextChanged += (s, e) => setts.no3dLayers = Read_int(s);
+            txt_3d_layers.TextChanged += (s, e) =>
+            {
+                setts.no3dLayers = Read_int(s);
+                sox_track_bar_xy.Maximum = setts.no3dLayers;
+                setts.layerToDisplay = 0;
+                sox_track_bar_xy.Value = setts.layerToDisplay;
+                txt_layer_to_display.Text = sox_track_bar_xy.Value.ToString();
+
+            };
 
             txt_3d_tox_start.TextChanged += (s, e) => setts.toxLayerStart = Read_int(s);
 
             txt_3d_tox_stop.TextChanged += (s, e) => setts.toxLayerStop = Read_int(s);
 
-            txt_layer_to_display.TextChanged += (s, e) => setts.layerToDisplay = Read_int(s);
+            //txt_layer_to_display.TextChanged += (s, e) => setts.layerToDisplay = Read_int(s);
 
-            if(setts.layerToDisplay >= (2+setts.no3dLayers) || setts.layerToDisplay < 0)
+            xy_direction_button.CheckedChanged += (s, e) =>
             {
-                Append_stat_ln("Warning: will display layer no " + Mod(setts.layerToDisplay, 2 + setts.no3dLayers).ToString() + " *not* layer " + (setts.layerToDisplay).ToString());
-                setts.layerToDisplay = Mod(setts.layerToDisplay, 2 + setts.no3dLayers);
-            }
+                if (direction_group_box.Enabled && xy_direction_button.Checked)
+                {
+                    sox_track_bar_xy.Enabled = true;
+                    chk_show_dead_axons.Enabled = true;
+                    chk_show_live_axons.Enabled = true;
+                    showdir = 0;
+                    int layerToDisplay = sox_track_bar_xy.Value;
+                    if(setts.no3dLayers <= 0)
+                    {
+                        layerToDisplay = 0;
+                    }
+                    else if (layerToDisplay >= (setts.no3dLayers) || layerToDisplay < 0)
+                    {
+                        Append_stat_ln("Warning: XY layers are indexed 0 to " + (setts.no3dLayers-1).ToString());
+                        layerToDisplay = Mod(layerToDisplay, setts.no3dLayers);
+                    }
+
+                    setts.layerToDisplay = layerToDisplay;
+                    sox_track_bar_xy.Value = setts.layerToDisplay;
+                    txt_layer_to_display.Text = sox_track_bar_xy.Value.ToString();
+                   // Append_stat_ln("Info: XY " + setts.layerToDisplay);
+                    if (simInProgress == false && preprocessDone)
+                    {
+                        Update_show_opts();
+                    }
+
+                }
+                else
+                {
+                    sox_track_bar_xy.Enabled = false;
+                }
+            };
+
+            xz_direction_button.CheckedChanged += (s, e) =>
+            {
+                if (direction_group_box.Enabled && xz_direction_button.Checked)
+                {
+                    sox_track_bar_xz.Enabled = true;
+                    chk_show_dead_axons.Enabled = false;
+                    chk_show_live_axons.Enabled = false;
+                    showdir = 1;
+                    int layerToDisplay = bmp_im_size - sox_track_bar_xz.Value;
+                    if(layerToDisplay < 0)
+                    {
+                        layerToDisplay = 0;
+                    }
+                    if (layerToDisplay >= bmp_im_size)
+                    {
+                        layerToDisplay = bmp_im_size;
+                    }
+                    setts.layerToDisplay = layerToDisplay;
+                    //Append_stat_ln("Info: XZ " + setts.layerToDisplay);
+                    if (simInProgress == false && preprocessDone)
+                    {
+                       Update_show_opts();
+                    }
+                }
+                else
+                {
+                    sox_track_bar_xz.Enabled = false;
+                }
+            };
+
+            yz_direction_button.CheckedChanged += (s, e) =>
+            {
+                if (direction_group_box.Enabled && yz_direction_button.Checked)
+                {
+                    chk_show_dead_axons.Enabled = false;
+                    chk_show_live_axons.Enabled = false;
+                    sox_track_bar_yz.Enabled = true;
+                    showdir = 2;
+                    setts.layerToDisplay = sox_track_bar_yz.Value;
+                    if (setts.layerToDisplay >= bmp_im_size)
+                    {
+                        setts.layerToDisplay = bmp_im_size;
+                    }
+                    //Append_stat_ln("Info: YZ " + setts.layerToDisplay);
+                    if (simInProgress == false && preprocessDone)
+                    {
+                        Update_show_opts();
+                    }
+                }
+                else
+                {
+                    sox_track_bar_yz.Enabled = false;
+                }
+            };
+
+            sox_track_bar_xz.ValueChanged += (s, e) =>
+            {
+                if (direction_group_box.Enabled && xz_direction_button.Checked)
+                {
+                    int layerToDisplay = bmp_im_size - sox_track_bar_xz.Value;
+                    if (layerToDisplay < 0)
+                    {
+                        layerToDisplay = 0;
+                    }
+                    if(layerToDisplay >= bmp_im_size)
+                    {
+                        layerToDisplay = bmp_im_size;
+                    }
+                    setts.layerToDisplay = layerToDisplay;
+                    //Append_stat_ln("Info: XZ " + setts.layerToDisplay);
+                    if (simInProgress == false && preprocessDone)
+                    {
+                        Update_show_opts();
+                    }
+                }
+                else
+                {
+                    sox_track_bar_xz.Enabled = false;
+                }
+            };
+
+            sox_track_bar_yz.ValueChanged += (s, e) =>
+            {
+                if (direction_group_box.Enabled && yz_direction_button.Checked)
+                {
+                    setts.layerToDisplay = sox_track_bar_yz.Value;
+                    if (setts.layerToDisplay >= bmp_im_size)
+                    {
+                        setts.layerToDisplay = bmp_im_size;
+                    }
+                    //Append_stat_ln("Info: YZ " + setts.layerToDisplay);
+                    if (simInProgress == false && preprocessDone)
+                    {
+                        Update_show_opts();
+                    }
+                }
+                else
+                {
+                    sox_track_bar_yz.Enabled = false;
+                }
+            };
+
+            sox_track_bar_xy.ValueChanged += (s, e) =>
+            {
+                if (direction_group_box.Enabled && xy_direction_button.Checked)
+                {
+                    int layerToDisplay = sox_track_bar_xy.Value;
+                    if(setts.no3dLayers <= 0 )
+                    {
+                        layerToDisplay = 0;
+                    }
+                    else if (layerToDisplay >= setts.no3dLayers || layerToDisplay < 0)
+                    {
+                        Append_stat_ln("Warning: XY layers are indexed 0 to " + (setts.no3dLayers - 1).ToString());
+                        layerToDisplay = Mod(layerToDisplay, setts.no3dLayers);
+                    }
+
+                    setts.layerToDisplay = layerToDisplay;
+                    sox_track_bar_xy.Value = setts.layerToDisplay;
+                    txt_layer_to_display.Text = sox_track_bar_xy.Value.ToString();
+                    //Append_stat_ln("Info: XY " + setts.layerToDisplay);
+                    if (simInProgress == false && preprocessDone)
+                    {
+                        Update_show_opts();
+                    }
+                }
+                else {
+                    sox_track_bar_xy.Enabled = false;
+                }
+            };
+
+            // The Maximum property sets the value of the track bar when
+            // the slider is all the way to the right.
+            //sox_track_bar.Minimum = 0;
+            //sox_track_bar.Maximum = setts.no3dLayers;
+
+            // The TickFrequency property establishes how many positions
+            // are between each tick-mark.
+            //sox_track_bar.TickFrequency = 1;
+
+            // The LargeChange property sets how many positions to move
+            // if the bar is clicked on either side of the slider.
+            //sox_track_bar.LargeChange = 1;
+
+            // The SmallChange property sets how many positions to move
+            // if the keyboard arrows are used to move the slider.
+            //sox_track_bar.SmallChange = 1;
 
             btn_save_model.Click += (s, e) =>
             {

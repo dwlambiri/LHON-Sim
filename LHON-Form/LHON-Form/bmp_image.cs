@@ -48,18 +48,26 @@ namespace LHON_Form
 
         [DllImport("kernel32.dll", EntryPoint = "CopyMemory", SetLastError = false)]
         public static extern void CopyMemory(IntPtr dest, IntPtr src, uint count);
-        unsafe private void Update_bmp_image(int layerToDisplay)
+        unsafe private void Update_bmp_image(int showdir, int layerToDisplay, int imsq)
         {
             if (InvokeRequired)
-                Invoke(new Action(() => Update_bmp_image(layerToDisplay)));
+                Invoke(new Action(() => Update_bmp_image(showdir, layerToDisplay, imsq)));
             else
             {
                 //[DWL] changed the denominator of 'red' to be 'on_death_tox' as opposed to 'death_threashold'
                 //[DWL] this way the chain reaction becomes clearly visible.
-                int offset = im_size * im_size * layerToDisplay;
+                int offset;
+                if(showdir != 0)
+                {
+                    offset = imsq * headLayer;
+                }
+                else
+                {
+                    offset = imsq *layerToDisplay;
+                }
 
                 gpu.Launch(update_bmp_gride_size_2D, update_bmp_block_size_2D).cuda_update_image(im_size, bmp_im_size, bmp_image_compression_ratio,
-                    bmp_bytes_dev, tox_dev, offset, axon_mask_dev, init_insult_mask_dev, death_tox_thres, chk_var_thr.Checked?death_var_thr:0, show_opts_dev);
+                    bmp_bytes_dev, tox_dev, offset, axon_mask_dev, init_insult_mask_dev, death_tox_thres*(1+(chk_var_thr.Checked?death_var_thr:0)), show_opts_dev, showdir, layerToDisplay, imsq, headLayer, setts.no3dLayers);
 
                 gpu.CopyFromDevice(bmp_bytes_dev, bmp_bytes);
 

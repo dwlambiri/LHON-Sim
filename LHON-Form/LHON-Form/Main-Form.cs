@@ -61,6 +61,8 @@ namespace LHON_Form
 
         unsafe private void Run_Alg_GPU()
         {
+
+           
             gpu = CudafyHost.GetDevice(CudafyModes.Target, CudafyModes.DeviceId); // should be reloaded for reliability
             alg_prof.Time(0);
 
@@ -77,8 +79,12 @@ namespace LHON_Form
             tt_sim.Start();
             
             headLayer = 2;
-            int layerToDisplay = Mod(setts.layerToDisplay , 2 + setts.no3dLayers);
+            int layerToDisplay;
             int totalPlanes = setts.no3dLayers + 2;
+
+            simInProgress = true;
+
+            int imsquare = im_size * im_size;
 
             while (true)
             {
@@ -92,9 +98,10 @@ namespace LHON_Form
                 int offset = 0;
                 if(setts.no3dLayers != 0)
                 {
-                    offset = headLayer * im_size * im_size;
+                    offset = headLayer * imsquare;
                 }
                 
+
                 gpu.Launch(blocks_per_grid_1D_axons, threads_per_block_1D).cuda_update_live(mdl.n_axons, tox_dev, rate_dev, detox_dev, tox_prod_dev, on_death_tox, k_detox_extra, death_thr_array_dev,
                     axons_cent_pix_dev, axons_inside_pix_dev, axons_inside_pix_idx_dev, axon_surr_rate_dev, axon_surr_rate_idx_dev,
                     axon_is_alive_dev, axon_mask_dev, num_alive_axons_dev, death_itr_dev, iteration, offset);
@@ -176,19 +183,20 @@ namespace LHON_Form
                     gpu.Set(sum_tox_dev);
                     if (setts.no3dLayers != 0)
                     {
-                        offset = headLayer * im_size * im_size;
+                        offset = headLayer;
                     }
                     else
                     {
                         offset = 0;
                     }
-                    gpu.Launch(blocks_per_grid_2D_pix, threads_per_block_1D).cuda_tox_sum(pix_idx_dev, pix_idx_num, tox_dev, sum_tox_dev, offset);
+
+                    gpu.Launch(blocks_per_grid_2D_pix, threads_per_block_1D).cuda_tox_sum(pix_idx_dev, pix_idx_num, tox_dev, sum_tox_dev, offset, imsquare, setts.no3dLayers);
                     gpu.CopyFromDevice(sum_tox_dev, out sum_tox);
 
                     if ((stop_at_iteration == 0) && Math.Abs(sum_tox - lvl_tox_last) < 1000F) { 
                     
                       duration_of_no_change += gui_iteration_period;
-                      if (duration_of_no_change >= stop_sim_at_duration_of_no_change)
+                      if (duration_of_no_change >= stop_sim_at_duration_of_no_change && headLayer == 2)
                       {
                         Stop_sim(Sim_stat_enum.Successful);
                       }
@@ -208,13 +216,28 @@ namespace LHON_Form
                     Update_gui_labels();
 
                     if (en_prof) { gpu.Synchronize(); alg_prof.Time(3); }
-
+                    int currentShow = showdir;
                     if (setts.no3dLayers != 0)
                     {
-                        layerToDisplay = Mod(headLayer  + setts.layerToDisplay, totalPlanes);
+
+
+                        if(showdir == 0)
+                        {
+                            layerToDisplay = Mod(headLayer + setts.layerToDisplay, totalPlanes);
+                        }
+                        else
+                        {
+                            layerToDisplay = setts.layerToDisplay;
+                        }
+                        
+                    }
+                    else
+                    {
+                        currentShow = 0;
+                        layerToDisplay = 0;
                     }
 
-                    Update_bmp_image(layerToDisplay);
+                    Update_bmp_image(currentShow, layerToDisplay, imsquare);
 
                     if (sim_stat == Sim_stat_enum.Running && chk_rec_avi.Checked)
                         Record_bmp_gif();
@@ -223,19 +246,22 @@ namespace LHON_Form
                 }
 
                 if (sim_stat != Sim_stat_enum.Running) break;
-                if (iteration == stop_at_iteration || (stop_at_time > 0 && realTime >= stop_at_time))
+                if ((iteration == stop_at_iteration || (stop_at_time > 0 && realTime >= stop_at_time)))
                     Stop_sim(Sim_stat_enum.Successful); // >>>>>>>>>>>>>>>>>> TEMP should be Paused
 
                 if (main_loop_delay > 0)
                     Thread.Sleep(main_loop_delay * 10);
-            }
+            } //[DWL] end of simulation loop
 
+            
             tt_sim.Pause();
 
             if (en_prof) alg_prof.report();
             else Debug.WriteLine("Sim took " + (Toc() / 1000).ToString("0.000") + " secs\n");
 
             simulationDone = true;
+            simInProgress = false;
+
         }
 
 
@@ -280,7 +306,7 @@ namespace LHON_Form
                 Update_show_opts();
 
                 Update_init_insult();
-                Update_bmp_image(0);
+                Update_bmp_image(0,0, im_size*im_size);
                 PicB_Resize(null, null);
 
                 sim_stat = Sim_stat_enum.None;
@@ -335,6 +361,27 @@ namespace LHON_Form
         }
 
         private void txt_delay_ms_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void checkedListBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void groupBox5_Enter(object sender, EventArgs e)
+        {
+
+        }
+
+
+        private void label42_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label43_Click(object sender, EventArgs e)
         {
 
         }

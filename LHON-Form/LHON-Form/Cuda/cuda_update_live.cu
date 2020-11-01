@@ -12,7 +12,10 @@ extern "C" __global__  void cuda_update_live(int n_axons, float* tox, unsigned c
 
 	if (n < n_axons)
 	{
-		if (axon_is_alive[n] && tox[axons_cent_pix[n]] > death_tox_thres[n])
+		// [DWL]: I made death_tox_threshold to be an array INSTEAD of a constant 
+		//			This way we can set the death threshold DIFFERENTLY for each axon
+		//			The death is calculated at the head of the axon
+		if (axon_is_alive[n] && tox[offset+axons_cent_pix[n]] > death_tox_thres[n])
 		{ 	// Kill the axon
 			for (int p = axons_inside_pix_idx[n]; p < axons_inside_pix_idx[n + 1]; p++)
 			{

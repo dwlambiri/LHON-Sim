@@ -8,7 +8,6 @@ extern "C" __global__  void cuda_diffusion2(int* pix_idx, int pix_idx_num, unsig
 	float* tox, float* detox, float* tox_prod, unsigned char* rate, float* rate_values, int rate_dimensions, 
 	int dstl, int tl, int ml, int bl, int top, int bottom, int injury)
 {
-	//float rate_values[] = { 0,0,0,0,0,0 };
 	int idx = (blockIdx.x * gridDim.y + blockIdx.y) * blockDim.x + threadIdx.x;
 	if (idx < pix_idx_num)
 	{
