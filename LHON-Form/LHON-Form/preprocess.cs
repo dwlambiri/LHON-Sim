@@ -83,7 +83,7 @@ namespace LHON_Form
         private readonly uint plane_neighbours = 4;
         private readonly uint space_neighbours = 6;
 
-        private int rate_dimensions = 4;
+        private int pixelNeighbourNumbers;
 
         private ushort im_size;
         private bool preprocessDone = false;
@@ -202,9 +202,12 @@ namespace LHON_Form
             Init_bmp_write();
 
             // ======== Pixel Properties =========
-            rate_dimensions = setts.no3dLayers !=0 ? 6 : 4;
 
-            rate = new byte[im_size * im_size * rate_dimensions];
+            int imsquare = im_size * im_size;
+
+            pixelNeighbourNumbers = setts.no3dLayers !=0 ? (int)space_neighbours : (int)plane_neighbours;
+
+            rate = new byte[imsquare * pixelNeighbourNumbers];
             rate_values = new float[6];
             rate_values[diff_zero_index] = 0;
             rate_values[diff_live_index] = k_rate_live_axon;
@@ -212,14 +215,14 @@ namespace LHON_Form
             rate_values[diff_dead_index] = k_rate_dead_axon;
             rate_values[diff_extra_index] = k_rate_extra;
             rate_values[diff_one_index] = 1;
-            detox = new float[im_size * im_size];
-            tox = new float[im_size * im_size];
-            tox_prod = new float[im_size * im_size];
+            detox = new float[imsquare];
+            tox = new float[imsquare];
+            tox_prod = new float[imsquare];
 
-            id_center_axon = new uint[im_size * im_size];
+            id_center_axon = new uint[imsquare];
 
-            axon_mask = axon_mask_init = new byte[im_size * im_size]; // for display. if 1: axon is live, if 2: axon is dead, otherwise 0.
-            pix_idx = new int[im_size * im_size]; // linear index of pixels within nerve
+            axon_mask = axon_mask_init = new byte[imsquare]; // for display. if 1: axon is live, if 2: axon is dead, otherwise 0.
+            pix_idx = new int[imsquare]; // linear index of pixels within nerve
 
             // ======== Axon Properties =========
 
@@ -231,11 +234,15 @@ namespace LHON_Form
             // temp variable
             int max_pixels_in_nerve = (int)(Pow2(mdl_nerve_r * res) * (1 - Pow2(mdl_vessel_ratio)) * Math.PI);
 
-            axons_inside_pix = new uint[max_pixels_in_nerve * 3 / 4];
-            axons_inside_pix_idx = new uint[mdl.n_axons + 1];
+            //Append_stat_ln("Info: imsize is" + im_size + "  mdl*res " + (mdl_nerve_r * res));
 
-            axons_surr_rate = new uint[max_pixels_in_nerve / 5];
+            axons_inside_pix = new uint[max_pixels_in_nerve];
+            axons_inside_pix_idx = new uint[mdl.n_axons + 1];
+            axons_inside_pix_idx[0] = 0;
+
+            axons_surr_rate = new uint[max_pixels_in_nerve*pixelNeighbourNumbers];
             axons_surr_rate_idx = new uint[mdl.n_axons + 1];
+            axons_surr_rate_idx[0] = 0;
 
             axon_is_init_insult = new bool[mdl.n_axons];
 
@@ -259,12 +266,12 @@ namespace LHON_Form
             preprocessGPUVar.Synchronize();
 
             pix_idx_num = 0;
-            rate_dev = preprocessGPUVar.Allocate<byte>(im_size * im_size * rate_dimensions);
+            rate_dev = preprocessGPUVar.Allocate<byte>(imsquare * pixelNeighbourNumbers);
             
-            detox_dev = preprocessGPUVar.Allocate<float>(im_size * im_size);
-            pix_idx_dev = preprocessGPUVar.Allocate<int>(im_size * im_size);
-            byte[] pix_out_of_nerve_dev = preprocessGPUVar.Allocate<byte>(im_size * im_size);
-            byte[] pix_out_of_nerve = new byte[im_size * im_size];
+            detox_dev = preprocessGPUVar.Allocate<float>(imsquare);
+            pix_idx_dev = preprocessGPUVar.Allocate<int>(imsquare);
+            byte[] pix_out_of_nerve_dev = preprocessGPUVar.Allocate<byte>(imsquare);
+            byte[] pix_out_of_nerve = new byte[imsquare];
 
             int prep_siz = 32;
             dim3 block_siz_prep = new dim3(prep_siz, prep_siz);
@@ -274,7 +281,7 @@ namespace LHON_Form
             //preprocessGPUVar.CopyToDevice(rate_values, rate_values_dev);
 
             preprocessGPUVar.Launch(grid_siz_prep, block_siz_prep).cuda_prep0(im_size, nerve_cent_pix, nerve_r_pix_2, vein_r_pix_2, k_rate_extra, k_detox_extra,
-                pix_out_of_nerve_dev, rate_dev, detox_dev, rate_dimensions);
+                pix_out_of_nerve_dev, rate_dev, detox_dev, pixelNeighbourNumbers);
 
             preprocessGPUVar.Synchronize();
 
@@ -284,7 +291,7 @@ namespace LHON_Form
 
             prep_prof.Time(1);
 
-            for (int idx = 0; idx < im_size * im_size; idx++)
+            for (int idx = 0; idx < imsquare; idx++)
                 if (pix_out_of_nerve[idx] == 0)
                     pix_idx[pix_idx_num++] = idx;
 
@@ -305,8 +312,6 @@ namespace LHON_Form
             Func<int, int, uint> xy_to_lin_idx = (x, y) => (uint)x * (uint)im_size + (uint)y;
             Func<uint, uint, uint> xy_to_lin_idx_u = (x, y) => (uint)x * (uint)im_size + (uint)y;
 
-            uint noNeighbours = (setts.no3dLayers == 0) ? plane_neighbours : space_neighbours;
-
             for (int i = 0; i < mdl.n_axons; i++)
             {
                 axon_is_large[i] = mdl.axon_coor[i][2] > axon_max_r_mean;
@@ -322,7 +327,7 @@ namespace LHON_Form
                 axons_cent_pix[i] = xy_to_lin_idx_u((uint)xCenter, (uint)yCenter);
                 id_center_axon[axons_cent_pix[i]] = (uint) i;
                 axon_lbl[i] = new AxonLabelClass { lbl = "", x = xCenter, y = yCenter };
-                axons_surr_rate_idx[i + 1] = axons_surr_rate_idx[i];
+                
 
                 float rc_1 = radiusCircle + process_clearance;
                 box_y_min[i] = Max((int)(yCenter - rc_1), 0);
@@ -353,6 +358,7 @@ namespace LHON_Form
             {
                 bool[,] is_inside_this_axon = new bool[box_siz_x[i], box_siz_y[i]];
                 axons_inside_pix_idx[i + 1] = axons_inside_pix_idx[i];
+                axons_surr_rate_idx[i + 1] = axons_surr_rate_idx[i]; //
 
                 for (int y = box_y_min[i]; y <= box_y_max[i]; y++) 
                 { 
@@ -371,6 +377,7 @@ namespace LHON_Form
                             //       *reaL* axon circumference (2*pi*r) => r is radius in um *not* pixels
                             // AxonTox = tox*pi*(pix)^2=2*k_tox*pix^2/(r*(res)^2)
                             //         =2*k_tox*(r*res)^2/r/res^2=2*k_tox*r
+
                             tox_prod[lin_idx] = k_tox_prod / (mdl.axon_coor[i][2]);
                             detox[lin_idx] = k_detox_intra;
                             // AxonInsult = i_pix*pi*pix^2= i_t/res^2*pi*pix^2=i_t/res^2*pi*(r*res)^2
@@ -396,17 +403,18 @@ namespace LHON_Form
                         int[] neighbors_y = new int[] { y_rel, y_rel, y_rel + 1, y_rel - 1 };
 
                         bool xy_inside = is_inside_this_axon[x_rel, y_rel];
-                        uint lin_idx_base = xy_to_lin_idx(x, y) * noNeighbours;
+                        uint lin_idx_base = xy_to_lin_idx(x, y) * (uint) pixelNeighbourNumbers;
 
                         for (uint k = 0; k < plane_neighbours; k++)
                         {
                             bool neigh_k_inside = is_inside_this_axon[neighbors_x[k], neighbors_y[k]];
 
                             uint lin_idx = lin_idx_base + k;
-
+                            
                             if (xy_inside != neigh_k_inside)
                             {
                                 rate[lin_idx] = diff_bound_index;
+                                axons_surr_rate[axons_surr_rate_idx[i + 1]++] = lin_idx;
                             }
                             else if (xy_inside)
                             {
@@ -417,7 +425,9 @@ namespace LHON_Form
                         if (xy_inside  && setts.no3dLayers > 0)
                         {
                             rate[lin_idx_base + rateDownLayerIndex] = diff_live_index;
+                            axons_surr_rate[axons_surr_rate_idx[i + 1]++] = lin_idx_base + rateDownLayerIndex;
                             rate[lin_idx_base + rateUpLayerIndex] = diff_live_index;
+                            axons_surr_rate[axons_surr_rate_idx[i + 1]++] = lin_idx_base + rateUpLayerIndex;
                         }
                     }
                 }
@@ -430,7 +440,7 @@ namespace LHON_Form
             }
 
             preprocessGPUVar.CopyToDevice(rate, rate_dev);
-            preprocessGPUVar.Launch(grid_siz_prep, block_siz_prep).cuda_prep1(im_size, pix_out_of_nerve_dev, rate_dev, rate_dimensions);
+            preprocessGPUVar.Launch(grid_siz_prep, block_siz_prep).cuda_prep1(im_size, pix_out_of_nerve_dev, rate_dev, pixelNeighbourNumbers);
             preprocessGPUVar.CopyFromDevice(rate_dev, rate);
 
             prep_prof.Time(6);
@@ -444,6 +454,9 @@ namespace LHON_Form
             //axon_mask_init = null; axon_mask_init = (byte[,])axon_mask.Clone();
             //axon_is_alive_init = null; axon_is_alive_init = (bool[])axon_is_alive.Clone();
 
+            preprocessDone = true;
+            simulationDone = false;
+
             Reset_state();
 
             // variable size study
@@ -451,9 +464,6 @@ namespace LHON_Form
 
             Update_bottom_stat("Preprocess Done! (" + (Toc() / 1000).ToString("0.0") + " secs)");
             // Debug.WriteLine("inside: {0} vs allocated {1}", axons_inside_pix_idx[mdl.n_axons - 1], axons_inside_pix.Length);
-
-            preprocessDone = true;
-            simulationDone = false;
 
             btn_start.Enabled = true;
 

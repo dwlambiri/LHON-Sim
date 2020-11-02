@@ -74,7 +74,7 @@ namespace LHON_Form
                 tt_sim.Restart();
                 Tic();
                 dt = 1F / Pow2(setts.resolution);
-                gui_iteration_period = Read_int(txt_rec_inerval);
+                gui_iteration_period = Read_int(txt_rec_interval);
             }
             tt_sim.Start();
             
@@ -100,20 +100,24 @@ namespace LHON_Form
                 {
                     offset = headLayer * imsquare;
                 }
-                
+                // [DWL] for debugging
+                //gpu.CopyFromDevice(rate_dev, rate);
+                //gpu.CopyFromDevice(axon_is_alive_dev, axon_is_alive);
 
                 gpu.Launch(blocks_per_grid_1D_axons, threads_per_block_1D).cuda_update_live(mdl.n_axons, tox_dev, rate_dev, detox_dev, tox_prod_dev, on_death_tox, k_detox_extra, death_thr_array_dev,
                     axons_cent_pix_dev, axons_inside_pix_dev, axons_inside_pix_idx_dev, axon_surr_rate_dev, axon_surr_rate_idx_dev,
-                    axon_is_alive_dev, axon_mask_dev, num_alive_axons_dev, death_itr_dev, iteration, offset);
+                    axon_is_alive_dev, axon_mask_dev, num_alive_axons_dev, death_itr_dev, iteration, offset, pixelNeighbourNumbers);
                 
                 if (en_prof) { gpu.Synchronize(); alg_prof.Time(1); }
 
-                
+                // [DWL] for debugging
+                //gpu.CopyFromDevice(rate_dev, rate);
+                //gpu.CopyFromDevice(axon_is_alive_dev, axon_is_alive);
 
-                if(setts.no3dLayers == 0)
+                if (setts.no3dLayers == 0)
                 {
                     gpu.Launch(blocks_per_grid_2D_pix, threads_per_block_1D).cuda_diffusion1(pix_idx_dev, pix_idx_num, im_size,
-                        tox_switch ? 1 : 0, tox_dev, detox_dev, tox_prod_dev, rate_dev, rate_values_dev, rate_dimensions);
+                        tox_switch ? 1 : 0, tox_dev, detox_dev, tox_prod_dev, rate_dev, rate_values_dev, pixelNeighbourNumbers);
                 }
                 else
                 {
@@ -125,7 +129,7 @@ namespace LHON_Form
                     bool injury = setts.toxLayerStart == 0;
 
                     gpu.Launch(blocks_per_grid_2D_pix, threads_per_block_1D).cuda_diffusion2(pix_idx_dev, pix_idx_num, im_size,
-                                            tox_dev, detox_dev, tox_prod_dev, rate_dev, rate_values_dev, rate_dimensions,
+                                            tox_dev, detox_dev, tox_prod_dev, rate_dev, rate_values_dev, pixelNeighbourNumbers,
                                             dstl, tl, ml, bl, 1, 0, injury ? 1 : 0);
 
                     for (int j = 1; j < setts.no3dLayers-1; j++)
@@ -136,7 +140,7 @@ namespace LHON_Form
                         bl   = Mod(headLayer + j + 1, totalPlanes);
                         injury = (j >= setts.toxLayerStart) && (j <= setts.toxLayerStop);
                         gpu.Launch(blocks_per_grid_2D_pix, threads_per_block_1D).cuda_diffusion2(pix_idx_dev, pix_idx_num, im_size,
-                                            tox_dev, detox_dev, tox_prod_dev, rate_dev, rate_values_dev, rate_dimensions,
+                                            tox_dev, detox_dev, tox_prod_dev, rate_dev, rate_values_dev, pixelNeighbourNumbers,
                                             dstl, tl, ml, bl, 0, 0, injury ? 1 : 0);
                     }
 
@@ -146,7 +150,7 @@ namespace LHON_Form
                     bl   = Mod(headLayer   + setts.no3dLayers - 1, totalPlanes);
                     injury = (setts.no3dLayers - 1 <= setts.toxLayerStop);
                     gpu.Launch(blocks_per_grid_2D_pix, threads_per_block_1D).cuda_diffusion2(pix_idx_dev, pix_idx_num, im_size,
-                                            tox_dev, detox_dev, tox_prod_dev, rate_dev, rate_values_dev, rate_dimensions,
+                                            tox_dev, detox_dev, tox_prod_dev, rate_dev, rate_values_dev, pixelNeighbourNumbers,
                                             dstl, tl, ml, bl, 0, 1, injury ? 1 : 0);
 
                     headLayer = Mod(headLayer - 2, totalPlanes);
@@ -223,7 +227,7 @@ namespace LHON_Form
 
                         if(showdir == 0)
                         {
-                            layerToDisplay = Mod(headLayer + setts.layerToDisplay, totalPlanes);
+                            layerToDisplay = Mod(headLayer + Mod(setts.layerToDisplay, setts.no3dLayers), totalPlanes);
                         }
                         else
                         {
@@ -283,8 +287,6 @@ namespace LHON_Form
                 duration_of_no_change = 0;
                 realTime = 0;
 
-                Update_gui_labels();
-
                 for (int i = 0; i < mdl.n_axons; i++) axon_lbl[i].lbl = "";
 
                 prog_im_siz = prog_im_siz_default;
@@ -303,10 +305,12 @@ namespace LHON_Form
 
                 Load_gpu_from_cpu();
 
-                Update_show_opts();
+                Update_gui_labels();
 
                 Update_init_insult();
-                Update_bmp_image(0,0, im_size*im_size);
+                Update_show_opts();
+
+                //Update_bmp_image(0,0, im_size*im_size);
                 PicB_Resize(null, null);
 
                 sim_stat = Sim_stat_enum.None;

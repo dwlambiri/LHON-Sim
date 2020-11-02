@@ -207,12 +207,7 @@ namespace LHON_Form
             {
                 if (showdir == 0)
                 {
-                    if (setts.layerToDisplay >= setts.no3dLayers || setts.layerToDisplay < 0)
-                    {
-                        Append_stat_ln("Warning: will display layer no " + Mod(setts.layerToDisplay, setts.no3dLayers).ToString() + " *not* layer " + (setts.layerToDisplay).ToString());
-                        setts.layerToDisplay = Mod(setts.layerToDisplay, setts.no3dLayers);
-                    }
-                    layerToDisplay = Mod(headLayer + setts.layerToDisplay, setts.no3dLayers );
+                    layerToDisplay = Mod(headLayer + Mod(setts.layerToDisplay, setts.no3dLayers), setts.no3dLayers +2);
                 }
                 else
                 {
@@ -439,9 +434,8 @@ namespace LHON_Form
                     {
                         layerToDisplay = 0;
                     }
-                    else if (layerToDisplay >= (setts.no3dLayers) || layerToDisplay < 0)
+                    else 
                     {
-                        Append_stat_ln("Warning: XY layers are indexed 0 to " + (setts.no3dLayers-1).ToString());
                         layerToDisplay = Mod(layerToDisplay, setts.no3dLayers);
                     }
 
@@ -572,9 +566,8 @@ namespace LHON_Form
                     {
                         layerToDisplay = 0;
                     }
-                    else if (layerToDisplay >= setts.no3dLayers || layerToDisplay < 0)
+                    else 
                     {
-                        Append_stat_ln("Warning: XY layers are indexed 0 to " + (setts.no3dLayers - 1).ToString());
                         layerToDisplay = Mod(layerToDisplay, setts.no3dLayers);
                     }
 
