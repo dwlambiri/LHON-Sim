@@ -238,7 +238,7 @@ namespace LHON_Form
                     setts.rate_live = val;
                     break;
                 case "Boundary Rate":
-                    setts.rate_bound = val;
+                    setts.rate_bound_a2e = val;
                     break;
                 case "Extra & Dead Rate":
                     setts.rate_extra = val;
@@ -246,7 +246,7 @@ namespace LHON_Form
                     break;
                 case "All Rates":
                     setts.rate_live = val;
-                    setts.rate_bound = val;
+                    setts.rate_bound_a2e = val;
                     setts.rate_extra = val;
                     setts.rate_dead = val;
                     break;

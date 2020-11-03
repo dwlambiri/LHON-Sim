@@ -58,7 +58,8 @@ namespace LHON_Form
 
             public float rate_live;
             public float rate_dead;
-            public float rate_bound;
+            public float rate_bound_a2e;
+            public float rate_bound_e2a;
             public float rate_extra;
             
             public float tox_prod;

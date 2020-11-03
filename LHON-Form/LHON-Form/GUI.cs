@@ -320,8 +320,24 @@ namespace LHON_Form
             {
                 float now = tt_sim.Read();
                 lbl_itr.Text = iteration.ToString("0");
-                lbl_tox.Text = (sum_tox / 1000).ToString("0.0") + " zMol";
-                lbl_max_tox.Text = (max_sum_tox / 1000).ToString("0.0") + " zMol";
+                if(sum_tox < 100)
+                {
+                    lbl_tox.Text = (sum_tox).ToString("0.0") + " yMol";
+                }
+                else
+                {
+                    lbl_tox.Text = (sum_tox / 1000).ToString("0.0") + " zMol";
+                }
+                
+                if( max_sum_tox < 100)
+                {
+                    lbl_max_tox.Text = (max_sum_tox).ToString("0.0") + " yMol";
+                }
+                else
+                {
+                    lbl_max_tox.Text = (max_sum_tox / 1000).ToString("0.0") + " zMol";
+                }
+                
                 // [DWL] yMol/area/height yM/V
                 // OXYGEN: 5L of molecular oxygen in body
                 //         5L / 0.1 m^3 = 50L / m^3
@@ -335,8 +351,8 @@ namespace LHON_Form
                 // thr+onDeath < UpperLimit/32*10^3/res ~ 220/ resolution
                 // dead diam < 4*prod/(scav*thr)
                 //Append_stat_ln(" mdl_nerve_r " + mdl_nerve_r + " resolution " + setts.resolution);
-                lbl_max_density.Text = (max_sum_tox/ (Pow2(mdl_nerve_r) * 3.1415 * (setts.no3dLayers+1)/ setts.resolution )).ToString("0.00") + " mM/L";  //  in mMol/l => max should not be over 35
-                lbl_density.Text = (sum_tox  / (Pow2(mdl_nerve_r) * 3.1415 * (setts.no3dLayers + 1)/ setts.resolution )).ToString("0.00") + " mM/L"; //  in mMol/l => max should not be over 35
+                lbl_max_density.Text = (max_sum_tox/ (Pow2(mdl_nerve_r) * Math.PI * (setts.no3dLayers+1)/ setts.resolution )).ToString("0.00") + " mM/L";  //  in mMol/l => max should not be over 35
+                lbl_density.Text = (sum_tox  / (Pow2(mdl_nerve_r) * Math.PI * (setts.no3dLayers + 1)/ setts.resolution )).ToString("0.00") + " mM/L"; //  in mMol/l => max should not be over 35
                 lbl_alive_axons_perc.Text = ((float)num_alive_axons[0] * 100 / mdl.n_axons).ToString("0.0") + "%";
                 var span = TimeSpan.FromSeconds(now / 1000);
                 lbl_sim_time.Text = string.Format("{0:00}:{1:00}:{2:00}", span.Minutes, span.Seconds, span.Milliseconds);
@@ -393,7 +409,8 @@ namespace LHON_Form
             txt_detox_extra.TextChanged += (s, e) => setts.detox_extra = Read_float(s);
             txt_detox_intra.TextChanged += (s, e) => setts.detox_intra = Read_float(s);
 
-            txt_rate_bound.TextChanged += (s, e) => setts.rate_bound = Read_float(s);
+            txt_rate_bound_a2e.TextChanged += (s, e) => setts.rate_bound_a2e = Read_float(s);
+            txt_rate_bound_e2a.TextChanged += (s, e) => setts.rate_bound_e2a = Read_float(s);
             txt_rate_dead.TextChanged += (s, e) => setts.rate_dead = Read_float(s);
             txt_rate_extra.TextChanged += (s, e) => setts.rate_extra = Read_float(s);
             txt_rate_live.TextChanged += (s, e) => setts.rate_live = Read_float(s);
@@ -678,7 +695,7 @@ namespace LHON_Form
             txt_detox_extra.Text = setts.detox_extra.ToString();
             txt_detox_intra.Text = setts.detox_intra.ToString();
 
-            txt_rate_bound.Text = setts.rate_bound.ToString();
+            txt_rate_bound_a2e.Text = setts.rate_bound_a2e.ToString();
             txt_rate_dead.Text = setts.rate_dead.ToString();
             txt_rate_extra.Text = setts.rate_extra.ToString();
             txt_rate_live.Text = setts.rate_live.ToString();

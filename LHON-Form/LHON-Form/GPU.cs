@@ -66,6 +66,7 @@ namespace LHON_Form
 
             rate_dev = gpuLocal.Allocate(rate); gpuLocal.CopyToDevice(rate, rate_dev);
             //[DWL] added this
+
             rate_values_dev = gpu.Allocate(rate_values); gpu.CopyToDevice(rate_values, rate_values_dev);
             detox_dev = gpuLocal.Allocate(detox); gpuLocal.CopyToDevice(detox, detox_dev);
             tox_prod_dev = gpuLocal.Allocate(tox_prod); gpuLocal.CopyToDevice(tox_prod, tox_prod_dev);

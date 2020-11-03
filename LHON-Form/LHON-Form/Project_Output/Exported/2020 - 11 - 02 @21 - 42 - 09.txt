@@ -1,0 +1,4 @@
+Scale = 0.2, Clearance = 0.2
+resolution = 5, rate_live = 0.1, rate_dead = 1, rate_bound_a2e = 0, rate_extra = 1
+tox_prod = 0.0045, detox_intra = 0.001, detox_extra = 0.0001, death_tox_thres = 1
+Small vs Medium Threshold (Radius) = 0.342 um, Medium vs Large Threshold (Radius) = 0.487 um

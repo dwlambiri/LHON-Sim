@@ -147,7 +147,7 @@ namespace LHON_Form
             using (StreamWriter file = new StreamWriter(path, true))
             {
                 file.WriteLine("Scale = {0}, Clearance = {1}", mdl.nerve_scale_ratio, mdl_clearance);
-                file.WriteLine("resolution = {0}, rate_live = {1}, rate_dead = {2}, rate_bound = {3}, rate_extra = {4}", setts.resolution, setts.rate_live, setts.rate_dead, setts.rate_bound, setts.rate_extra);
+                file.WriteLine("resolution = {0}, rate_live = {1}, rate_dead = {2}, rate_bound_a2e = {3}, rate_extra = {4}", setts.resolution, setts.rate_live, setts.rate_dead, setts.rate_bound_a2e, setts.rate_extra);
                 file.WriteLine("tox_prod = {0}, detox_intra = {1}, detox_extra = {2}, death_tox_thres = {3}", setts.tox_prod, setts.detox_intra, setts.detox_extra, setts.death_tox_thres);
                 file.WriteLine("Small vs Medium Threshold (Radius) = {0} um, Medium vs Large Threshold (Radius) = {1} um", small_medium_thrs_r, medium_large_thrs_r);
             }
@@ -174,7 +174,7 @@ namespace LHON_Form
 
                     writer.Write(setts.rate_live);
                     writer.Write(setts.rate_dead);
-                    writer.Write(setts.rate_bound);
+                    writer.Write(setts.rate_bound_a2e);
                     writer.Write(setts.rate_extra);
 
                     writer.Write(setts.tox_prod);

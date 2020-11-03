@@ -217,7 +217,7 @@ namespace LHON_Form
                         max_sum_tox = sum_tox;
                     }
 
-                    Update_gui_labels();
+                    
 
                     if (en_prof) { gpu.Synchronize(); alg_prof.Time(3); }
                     int currentShow = showdir;
@@ -242,6 +242,7 @@ namespace LHON_Form
                     }
 
                     Update_bmp_image(currentShow, layerToDisplay, imsquare);
+                    Update_gui_labels();
 
                     if (sim_stat == Sim_stat_enum.Running && chk_rec_avi.Checked)
                         Record_bmp_gif();
@@ -390,5 +391,9 @@ namespace LHON_Form
 
         }
 
+        private void tableLayoutPanel2_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
     }
 }
