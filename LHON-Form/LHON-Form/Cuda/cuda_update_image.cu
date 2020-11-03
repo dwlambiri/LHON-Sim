@@ -1,6 +1,6 @@
 ﻿
 extern "C" __global__  void cuda_update_image(unsigned short im_size, unsigned short bmp_im_size, float bmp_image_compression_ratio,
-	unsigned char* bmp, float* tox, int offset, unsigned char* axon_mask, unsigned char* init_insult_mask, float tox_max, bool* show_opts, int showdir, int lineToDisplay, int imsq, int head, int no3d)
+	unsigned char* bmp, float* tox, unsigned char* axon_mask, unsigned char* init_insult_mask, float tox_max, bool* show_opts, int showdir, int lineToDisplay, int imsq, int head, int no3d)
 {
 	int x_bmp = blockIdx.x * blockDim.x + threadIdx.x;
 	int y_bmp = blockIdx.y * blockDim.y + threadIdx.y;
@@ -48,7 +48,7 @@ extern "C" __global__  void cuda_update_image(unsigned short im_size, unsigned s
 			int xpos = (int)((float)(bmp_im_size - x_bmp) * bmp_image_compression_ratio);
 			int ypos = (int)((float)y_bmp * bmp_image_compression_ratio);
 			int xy = ypos * im_size + xpos;
-			float tmp = tox[offset + xy] / tox_max;
+			float tmp = tox[imsq*lineToDisplay + xy] / tox_max;
 			if (tmp > 1) tmp = 1;
 			unsigned char normalized_toxin = (unsigned char)(tmp * 255); // 0 - 255
 			if (init_insult_mask[xy_bmp]) { blue = green = 127; /*red = 0;*/ }

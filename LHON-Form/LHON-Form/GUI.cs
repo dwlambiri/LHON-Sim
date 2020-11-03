@@ -45,6 +45,10 @@ namespace LHON_Form
 
             Init_sweep();
 
+            chk_var_thr.CheckedChanged += (o, e) => {
+                setts.varToxProd = chk_var_thr.Checked;
+                };
+
             chk_show_live_axons.CheckedChanged += (o, e) => Update_show_opts();
             chk_show_dead_axons.CheckedChanged += (o, e) => Update_show_opts();
             chk_show_tox.CheckedChanged += (o, e) =>
@@ -80,35 +84,100 @@ namespace LHON_Form
             {
                 if (rate == null)
                 {
-                    Append_stat_ln("You must preprocess the model before resetting the state.\n");
+                    Append_stat_ln("Info: Calling preprocess.....");
+                    Preprocess_model();
+                    Append_stat_ln("Info: Preprocessing complete.");
                     return;
                 }
                 if (sim_stat == Sim_stat_enum.Running)
                 {
-                    Append_stat_ln("You must stop the simulation before resetting the states.\n");
+                    Append_stat_ln("Warning: You must stop the simulation before resetting the states.");
                     return;
                 }
-                Reset_state(); Set_btn_start_txt("&Start");
+                Reset_state(); Set_btn_start_txt("&Start", System.Drawing.Color.Green);
+                Update_bottom_stat("Simulation state was reset!");
             };
 
             btn_start.Click += (s, e) =>
             {
                 if (sim_stat == Sim_stat_enum.None || sim_stat == Sim_stat_enum.Paused)
+                {
+                    txt_3d_layers.Enabled = false;
+                    txt_3d_tox_start.Enabled = false;
+                    txt_3d_tox_stop.Enabled = false;
+                    btn_preprocess.Enabled = false;
+                    btn_reset.Enabled = false;
+                    btn_load_setts.Enabled = false;
+                    btn_load_model.Enabled = false;
+                    btn_redraw.Enabled = false;
+                    txt_resolution.Enabled = false;
+                    txt_nerve_scale.Enabled = false;
+                    txt_death_tox_threshold.Enabled= false;
+                    txt_detox_extra.Enabled = false;
+                    txt_detox_intra.Enabled = false;
+                    txt_on_death_tox.Enabled = false;
+                    txt_rate_bound_a2e.Enabled = false;
+                    txt_rate_bound_e2a.Enabled = false;
+                    txt_rate_dead.Enabled = false;
+                    txt_rate_extra.Enabled = false;
+                    txt_rate_extra_z.Enabled = false;
+                    txt_rate_live.Enabled = false;
+                    txt_rate_live_z.Enabled = false;
+                    txt_tox_prod_rate.Enabled = false;
+                    txt_var_death.Enabled = false;
+                    chk_var_death.Enabled = false;
+                    chk_strict_rad.Enabled = false;
+                    txt_clearance.Enabled = false;
+
                     Start_sim();
+                }
                 else if (sim_stat == Sim_stat_enum.Running)
+                {
                     Stop_sim(Sim_stat_enum.Paused);
+                    txt_3d_layers.Enabled = true;
+                    txt_3d_tox_start.Enabled = true;
+                    txt_3d_tox_stop.Enabled = true;
+                    btn_preprocess.Enabled = true;
+                    btn_reset.Enabled = true;
+                    btn_load_setts.Enabled = true;
+                    btn_load_model.Enabled = true;
+                    btn_redraw.Enabled = true;
+                    txt_resolution.Enabled = true;
+                    txt_nerve_scale.Enabled = true;
+                    txt_death_tox_threshold.Enabled = true;
+                    txt_detox_extra.Enabled = true;
+                    txt_detox_intra.Enabled = true;
+                    txt_on_death_tox.Enabled = true;
+                    txt_rate_bound_a2e.Enabled = true;
+                    txt_rate_bound_e2a.Enabled = true;
+                    txt_rate_dead.Enabled = true;
+                    txt_rate_extra.Enabled = true;
+                    txt_rate_extra_z.Enabled = true;
+                    txt_rate_live.Enabled = true;
+                    txt_rate_live_z.Enabled = true;
+                    txt_tox_prod_rate.Enabled = true;
+                    txt_var_death.Enabled = true;
+                    chk_var_death.Enabled = true;
+                    chk_strict_rad.Enabled = true;
+                    txt_clearance.Enabled = true;
+                } 
             };
 
-            btn_redraw.Click += (s, e) => { if (sim_stat != Sim_stat_enum.Running && !new_model_worker.IsBusy) new_model_worker.RunWorkerAsync(); };
+            btn_redraw.Click += (s, e) => { // [DWL] Generate Model Button
+                if (sim_stat != Sim_stat_enum.Running && !new_model_worker.IsBusy) new_model_worker.RunWorkerAsync(); 
+            };
 
             btn_preprocess.Click += (s, e) =>
             {
                 if (sim_stat == Sim_stat_enum.Running)
                 {
-                    Append_stat_ln("You must stop the simulation before preprogress.\n");
+                    Append_stat_ln("Warning: You must stop the simulation before preprogress.");
                     return;
                 }
+                Append_stat_ln("Info: Preprocessing model.");
                 Preprocess_model();
+                Append_stat_ln("Info: Preprocessing done.");
+                Set_btn_start_txt("&Start", System.Drawing.Color.Green);
             };
 
             btn_clr.Click += (s, e) => txt_status.Text = "";
@@ -218,8 +287,8 @@ namespace LHON_Form
             {
                 currentShow = 0;
             }
-
-            Update_bmp_image(currentShow, layerToDisplay, im_size* im_size);
+            if(sim_stat != Sim_stat_enum.Running)
+                Update_bmp_image(currentShow, layerToDisplay, im_size* im_size);
             //Update_bmp_image(0);
         }
 
@@ -233,11 +302,16 @@ namespace LHON_Form
                 Append_stat_ln("You must preprocess the model before running simulation.\n");
                 return;
             }
-            if (sim_stat == Sim_stat_enum.None || sim_stat == Sim_stat_enum.Paused)
+            if (sim_stat == Sim_stat_enum.None || sim_stat == Sim_stat_enum.Stopped || sim_stat == Sim_stat_enum.Successful || sim_stat == Sim_stat_enum.Failed)
             {
                 sim_stat = Sim_stat_enum.Running;
                 alg_worker.RunWorkerAsync();
-                Set_btn_start_txt("&Pause");
+                Set_btn_start_txt("&Pause", System.Drawing.Color.DarkRed);
+                Update_bottom_stat("Simulation is Running");
+            } else if(sim_stat == Sim_stat_enum.Paused)
+            {
+                sim_stat = Sim_stat_enum.Running;
+                Set_btn_start_txt("&Pause",  System.Drawing.Color.DarkRed);
                 Update_bottom_stat("Simulation is Running");
             }
         }
@@ -247,9 +321,14 @@ namespace LHON_Form
             if (sim_stat == Sim_stat_enum.Running)
             {
                 sim_stat = stat;
-                if (sim_stat == Sim_stat_enum.Paused) Set_btn_start_txt("&Continue");
-                else Set_btn_start_txt("&Start");
+                if (sim_stat == Sim_stat_enum.Paused) Set_btn_start_txt("&Continue", System.Drawing.Color.Green);
+                else Set_btn_start_txt("&Start", System.Drawing.Color.Green);
 
+                Update_bottom_stat("Simulation is " + sim_stat.ToString());
+            }else if(sim_stat == Sim_stat_enum.Paused)
+            {
+                sim_stat = stat;
+                Set_btn_start_txt("&Start", System.Drawing.Color.Green);
                 Update_bottom_stat("Simulation is " + sim_stat.ToString());
             }
         }
@@ -263,10 +342,14 @@ namespace LHON_Form
             Thread.Sleep(10);
         }
 
-        private void Set_btn_start_txt(string s)
+        private void Set_btn_start_txt(string s, System.Drawing.Color color)
         {
-            if (InvokeRequired) Invoke(new Action(() => btn_start.Text = s));
-            else btn_start.Text = s;
+            if (InvokeRequired) Invoke(new Action(() => { btn_start.Text = s; btn_start.BackColor = color; }));
+            else
+            {
+                btn_start.Text = s;
+                btn_start.BackColor = color;
+            }
         }
 
         private void Update_num_axons_lbl()
@@ -404,7 +487,24 @@ namespace LHON_Form
 
             // Preprocess parameters
 
-            txt_resolution.TextChanged += (s, e) => setts.resolution = Read_float(s);
+            txt_resolution.TextChanged += (s, e) =>
+            {
+
+                setts.resolution = Read_float(s);
+
+
+            };
+
+            txt_rec_interval.TextChanged += (s, e) => {
+
+                int tmp = Read_int(txt_rec_interval);
+                if(tmp <= 0 )
+                {
+                    tmp = 1;
+                    txt_rec_interval.Text = "1"; // minimum value!!
+                }
+                setts.gui_iteration_period = tmp;
+            };
 
             txt_detox_extra.TextChanged += (s, e) => setts.detox_extra = Read_float(s);
             txt_detox_intra.TextChanged += (s, e) => setts.detox_intra = Read_float(s);
@@ -426,17 +526,56 @@ namespace LHON_Form
 
             txt_3d_layers.TextChanged += (s, e) =>
             {
-                setts.no3dLayers = Read_int(s);
-                sox_track_bar_xy.Maximum = setts.no3dLayers;
-                setts.layerToDisplay = 0;
-                sox_track_bar_xy.Value = setts.layerToDisplay;
-                txt_layer_to_display.Text = sox_track_bar_xy.Value.ToString();
+                if (sim_stat == Sim_stat_enum.None || sim_stat == Sim_stat_enum.Paused)
+                {
+                    setts.no3dLayers = Read_int(s);
+                    sox_track_bar_xy.Maximum = setts.no3dLayers;
+                    setts.layerToDisplay = 0;
+                    sox_track_bar_xy.Value = setts.layerToDisplay;
+                    txt_layer_to_display.Text = sox_track_bar_xy.Value.ToString();
+                    if (setts.no3dLayers == 0)
+                    {
+                        xy_direction_button.Checked = true;
+                        xz_direction_button.Checked = false;
+                        yz_direction_button.Checked = false;
+                        xy_direction_button.Enabled = true;
+                        xz_direction_button.Enabled = false;
+                        yz_direction_button.Enabled = false;
+                    }
+                    else
+                    {
+                        xy_direction_button.Enabled = true;
+                        xz_direction_button.Enabled = true;
+                        yz_direction_button.Enabled = true;
+                    }
+                    Append_stat_ln("Info: Number of layers changed. Calling preprocess.....");
+                    Preprocess_model();
+                    Append_stat_ln("Info: Preprocessing complete.");
+                }
+                else
+                {
+                    Append_stat_ln("Warning: Cannot change the number of layers while the sim is running.");
+                }
 
             };
 
-            txt_3d_tox_start.TextChanged += (s, e) => setts.toxLayerStart = Read_int(s);
+            txt_3d_tox_start.TextChanged += (s, e) =>
+            {
+                if (sim_stat == Sim_stat_enum.None || sim_stat == Sim_stat_enum.Paused)
+                {
+                    setts.toxLayerStart = Read_int(s);
+                    Append_stat_ln("Info: Position of start SOX layer changed. Using previous preprocessing.");
+                }
+            };
 
-            txt_3d_tox_stop.TextChanged += (s, e) => setts.toxLayerStop = Read_int(s);
+            txt_3d_tox_stop.TextChanged += (s, e) =>
+            {
+                if (sim_stat == Sim_stat_enum.None || sim_stat == Sim_stat_enum.Paused)
+                {
+                    setts.toxLayerStop = Read_int(s);
+                    Append_stat_ln("Info: Position of stop SOX layer changed. Using previous preprocessing.");
+                }
+            };
 
             //txt_layer_to_display.TextChanged += (s, e) => setts.layerToDisplay = Read_int(s);
 
@@ -462,7 +601,7 @@ namespace LHON_Form
                     sox_track_bar_xy.Value = setts.layerToDisplay;
                     txt_layer_to_display.Text = sox_track_bar_xy.Value.ToString();
                    // Append_stat_ln("Info: XY " + setts.layerToDisplay);
-                    if (simInProgress == false && preprocessDone)
+                    if (preprocessDone)
                     {
                         Update_show_opts();
                     }
@@ -493,7 +632,7 @@ namespace LHON_Form
                     }
                     setts.layerToDisplay = layerToDisplay;
                     //Append_stat_ln("Info: XZ " + setts.layerToDisplay);
-                    if (simInProgress == false && preprocessDone)
+                    if (preprocessDone)
                     {
                        Update_show_opts();
                     }
@@ -518,7 +657,7 @@ namespace LHON_Form
                         setts.layerToDisplay = bmp_im_size;
                     }
                     //Append_stat_ln("Info: YZ " + setts.layerToDisplay);
-                    if (simInProgress == false && preprocessDone)
+                    if (preprocessDone)
                     {
                         Update_show_opts();
                     }
@@ -544,7 +683,7 @@ namespace LHON_Form
                     }
                     setts.layerToDisplay = layerToDisplay;
                     //Append_stat_ln("Info: XZ " + setts.layerToDisplay);
-                    if (simInProgress == false && preprocessDone)
+                    if (preprocessDone)
                     {
                         Update_show_opts();
                     }
@@ -565,7 +704,7 @@ namespace LHON_Form
                         setts.layerToDisplay = bmp_im_size;
                     }
                     //Append_stat_ln("Info: YZ " + setts.layerToDisplay);
-                    if (simInProgress == false && preprocessDone)
+                    if (preprocessDone)
                     {
                         Update_show_opts();
                     }
@@ -594,7 +733,7 @@ namespace LHON_Form
                     sox_track_bar_xy.Value = setts.layerToDisplay;
                     txt_layer_to_display.Text = sox_track_bar_xy.Value.ToString();
                     //Append_stat_ln("Info: XY " + setts.layerToDisplay);
-                    if (simInProgress == false && preprocessDone)
+                    if (preprocessDone)
                     {
                         Update_show_opts();
                     }
@@ -644,6 +783,9 @@ namespace LHON_Form
                 };
                 if (FD.ShowDialog() != DialogResult.OK) return;
                 Load_model(FD.FileName);
+                Preprocess_model();
+                Append_stat_ln("Info: Preprocessing done.");
+                Set_btn_start_txt("&Start", System.Drawing.Color.Green);
             };
 
             btn_save_setts.Click += (s, e) =>
@@ -716,6 +858,10 @@ namespace LHON_Form
             txt_var_death.Text = setts.death_var_thr.ToString();
 
             txt_clearance.Text = mdl_clearance.ToString();
+
+            txt_rec_interval.Text = setts.gui_iteration_period.ToString();
+
+            chk_var_thr.Checked = setts.varToxProd;
 
             Update_num_axons_lbl();
         }

@@ -53,6 +53,8 @@ namespace LHON_Form
         private int ml = 0;
         private int bl = 0;
 
+        private int gui_iteration_period = 10;
+
         private int Mod(int x, int m)
         {
             int r = x % m;
@@ -66,15 +68,12 @@ namespace LHON_Form
             gpu = CudafyHost.GetDevice(CudafyModes.Target, CudafyModes.DeviceId); // should be reloaded for reliability
             alg_prof.Time(0);
 
-            int gui_iteration_period = 10;
-
             if (iteration == 0)
             {
                 Load_gpu_from_cpu();
                 tt_sim.Restart();
                 Tic();
                 dt = 1F / Pow2(setts.resolution);
-                gui_iteration_period = Read_int(txt_rec_interval);
             }
             tt_sim.Start();
             
@@ -88,10 +87,27 @@ namespace LHON_Form
 
             while (true)
             {
+
+                while(sim_stat == Sim_stat_enum.Paused)
+                {
+                    //Append_stat_ln("Info Head: " + headLayer);
+                    Thread.Sleep(100);
+                }
+
+                // [DWL] Exit the loop under these conditions
+
+                if(sim_stat == Sim_stat_enum.None || sim_stat == Sim_stat_enum.Failed || sim_stat == Sim_stat_enum.Successful || sim_stat == Sim_stat_enum.Stopped)
+                {
+                    Append_stat_ln("Info: Exiting worker thread");
+                    break;
+                }
+
                 iteration++;
                 realTime += dt;
 
-                bool update_gui = iteration % gui_iteration_period == 0;
+                int local_update_period = setts.gui_iteration_period;
+                bool update_gui = iteration % local_update_period == 0;
+               
 
                 alg_prof.Time(-1);
 
@@ -156,11 +172,13 @@ namespace LHON_Form
                     headLayer = Mod(headLayer - 2, totalPlanes);
                     if (setts.no3dLayers < 0)
                     {
-                        Debug.WriteLine("ERROR: no layers is less than zero!");
+                        Append_stat_ln("ERROR: no layers is less than zero! Simulation stopped!");
+                        return;
                     }
                     if(headLayer < 0)
                     {
-                        Debug.WriteLine("ERROR: headLayer is less than zero!");
+                        Append_stat_ln("ERROR: headLayer is less than zero! Simulation stopped!");
+                        return;
                     }
                     
                 }
@@ -199,7 +217,7 @@ namespace LHON_Form
 
                     if ((stop_at_iteration == 0) && Math.Abs(sum_tox - lvl_tox_last) < 1000F) { 
                     
-                      duration_of_no_change += gui_iteration_period;
+                      duration_of_no_change += local_update_period;
                       if (duration_of_no_change >= stop_sim_at_duration_of_no_change && headLayer == 2)
                       {
                         Stop_sim(Sim_stat_enum.Successful);
@@ -250,7 +268,6 @@ namespace LHON_Form
                     if (en_prof) alg_prof.Time(4);
                 }
 
-                if (sim_stat != Sim_stat_enum.Running) break;
                 if ((iteration == stop_at_iteration || (stop_at_time > 0 && realTime >= stop_at_time)))
                     Stop_sim(Sim_stat_enum.Successful); // >>>>>>>>>>>>>>>>>> TEMP should be Paused
 

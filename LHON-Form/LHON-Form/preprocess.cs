@@ -109,12 +109,14 @@ namespace LHON_Form
         // Requires full Model info and assigns tox, rate, etc
         private void Preprocess_model()
         {
-            
 
-            
+
+
             // =======================================
             //              Init Parameters
             // =======================================
+
+            sim_stat = Sim_stat_enum.None;
 
             float res = setts.resolution;
             mdl_nerve_r = mdl.nerve_scale_ratio * mdl_real_nerve_r;
@@ -186,8 +188,7 @@ namespace LHON_Form
                 //return;
             }
 
-            // 
-            bool variableDeathThreshold = chk_var_thr.Checked;
+            //
             death_tox_thres = setts.death_tox_thres / Pow2(res);
             death_var_thr = setts.death_var_thr;
             insult_tox = setts.insult_tox / Pow2(res);
@@ -364,7 +365,7 @@ namespace LHON_Form
                     Append_stat_ln("Warning: " + i + " " + box_x_min[i] + " " + box_y_min[i]);
                 }
 
-                if(variableDeathThreshold == false)
+                if(setts.varToxProd == false)
                 {
                     death_thr_array[i] = death_tox_thres;
                 }

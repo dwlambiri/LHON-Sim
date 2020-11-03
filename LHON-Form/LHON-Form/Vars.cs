@@ -38,7 +38,7 @@ namespace LHON_Form
 
         // float[] init_insult = new float[2] { 0, 0 };
 
-        private enum Sim_stat_enum { None, Running, Paused, Successful, Failed };
+        private enum Sim_stat_enum { None, Running, Paused, Successful, Failed, Stopped };
 
         private Sim_stat_enum sim_stat = Sim_stat_enum.None;
 
@@ -65,6 +65,7 @@ namespace LHON_Form
             public float rate_extra_z;
             
             public float tox_prod;
+            public bool varToxProd;
             public float on_death_tox;
 
             public float detox_intra;
@@ -84,6 +85,9 @@ namespace LHON_Form
             public int toxLayerStop;
 
             public int layerToDisplay;
+
+            public int gui_iteration_period;
+
         }
 
         private Model mdl = new Model();

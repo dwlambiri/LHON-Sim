@@ -56,18 +56,9 @@ namespace LHON_Form
             {
                 //[DWL] changed the denominator of 'red' to be 'on_death_tox' as opposed to 'death_threashold'
                 //[DWL] this way the chain reaction becomes clearly visible.
-                int offset;
-                if(showdir != 0)
-                {
-                    offset = imsq * headLayer;
-                }
-                else
-                {
-                    offset = imsq *layerToDisplay;
-                }
 
                 gpu.Launch(update_bmp_gride_size_2D, update_bmp_block_size_2D).cuda_update_image(im_size, bmp_im_size, bmp_image_compression_ratio,
-                    bmp_bytes_dev, tox_dev, offset, axon_mask_dev, init_insult_mask_dev, death_tox_thres*(1+(chk_var_thr.Checked?death_var_thr:0)), show_opts_dev, showdir, layerToDisplay, imsq, headLayer, setts.no3dLayers);
+                    bmp_bytes_dev, tox_dev, axon_mask_dev, init_insult_mask_dev, death_tox_thres*(1+(chk_var_thr.Checked?death_var_thr:0)), show_opts_dev, setts.no3dLayers > 0 ? showdir: 0, setts.no3dLayers > 0 ? layerToDisplay: 0, imsq, setts.no3dLayers> 0 ? headLayer: 0, setts.no3dLayers);
 
                 gpu.CopyFromDevice(bmp_bytes_dev, bmp_bytes);
 
