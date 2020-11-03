@@ -1,9 +1,4 @@
 ﻿
-#define diff_live_index 1
-#define diff_bound_index 2
-#define diff_dead_index 3
-#define diff_extra_index 4
-
 extern "C" __global__  void cuda_diffusion1(int* pix_idx, int pix_idx_num, unsigned short im_size,
 	int tox_switch, float* tox, float* detox, float* tox_prod, unsigned char* rate, float* rate_values, int rate_dimensions)
 {

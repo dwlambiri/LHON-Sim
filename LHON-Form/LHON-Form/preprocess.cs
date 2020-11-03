@@ -38,7 +38,7 @@ namespace LHON_Form
         */
 
         private float k_detox_intra, k_detox_extra, k_tox_prod, death_tox_thres, death_var_thr, insult_tox, on_death_tox,
-            k_rate_live_axon, k_rate_boundary, k_rate_dead_axon, k_rate_extra;
+            k_rate_live_axon, k_rate_boundary_a2e, k_rate_boundary_e2a, k_rate_dead_axon, k_rate_extra;
 
 
         // ====================================
@@ -71,10 +71,12 @@ namespace LHON_Form
 
         private readonly byte diff_zero_index = 0;
         private readonly byte diff_live_index = 1;
-        private readonly byte diff_bound_index = 2;
-        private readonly byte diff_dead_index = 3;
-        private readonly byte diff_extra_index = 4;
-        private readonly byte diff_one_index = 5;
+        private readonly byte diff_bound_index_a2e = 2;
+        private readonly byte diff_bound_index_e2a = 3;
+        private readonly byte diff_dead_index = 4;
+        private readonly byte diff_extra_index = 5;
+        private readonly byte diff_one_index = 6;
+        private readonly byte diff_values_size = 7;
 
         private readonly uint rateUpLayerIndex = 4;
         private readonly uint rateDownLayerIndex = 5;
@@ -118,7 +120,8 @@ namespace LHON_Form
             float rate_conv = Pow2(res / min_res_c);
             float upperValue_c = 1F;
             if (setts.rate_live > upperValue_c ||
-                setts.rate_bound > upperValue_c ||
+                setts.rate_bound_a2e > upperValue_c ||
+                setts.rate_bound_e2a > upperValue_c ||
                 setts.rate_dead > upperValue_c ||
                 setts.rate_extra > upperValue_c)
             {
@@ -128,7 +131,8 @@ namespace LHON_Form
 
             float lowerValue_c = 0F;
             if (setts.rate_live < lowerValue_c ||
-                setts.rate_bound < lowerValue_c ||
+                setts.rate_bound_a2e < lowerValue_c ||
+                setts.rate_bound_e2a < lowerValue_c ||
                 setts.rate_dead < lowerValue_c ||
                 setts.rate_extra < lowerValue_c)
             {
@@ -157,12 +161,14 @@ namespace LHON_Form
 
             // User inputs 0 to 1 for rate values 
             k_rate_live_axon = setts.rate_live / fiveF * rate_conv;
-            k_rate_boundary = setts.rate_bound / fiveF * rate_conv;
+            k_rate_boundary_a2e = setts.rate_bound_a2e / fiveF * rate_conv;
+            k_rate_boundary_e2a = setts.rate_bound_e2a / fiveF * rate_conv;
             k_rate_dead_axon = setts.rate_dead / fiveF * rate_conv;
             k_rate_extra = setts.rate_extra / fiveF * rate_conv;
 
             if (k_rate_live_axon > 0.25 || 
-                k_rate_boundary > 0.25 ||
+                k_rate_boundary_a2e > 0.25 ||
+                k_rate_boundary_e2a > 0.25 ||
                 k_rate_dead_axon > 0.25 ||
                 k_rate_extra > 0.25)
             {
@@ -179,7 +185,7 @@ namespace LHON_Form
 
             if(setts.death_tox_thres + setts.on_death_tox > 220/ res)
             {
-                Append_stat_ln("Info: Death Thr + On Death Extra > 220 / Resolution. SOX Density in axon too high.");
+                //Append_stat_ln("Info: Death Thr + On Death Extra > 220 / Resolution. SOX Density in axon too high.");
             }
 
             if(setts.detox_intra != 0 && setts.death_tox_thres != 0)
@@ -208,10 +214,11 @@ namespace LHON_Form
             pixelNeighbourNumbers = setts.no3dLayers !=0 ? (int)space_neighbours : (int)plane_neighbours;
 
             rate = new byte[imsquare * pixelNeighbourNumbers];
-            rate_values = new float[6];
+            rate_values = new float[diff_values_size];
             rate_values[diff_zero_index] = 0;
             rate_values[diff_live_index] = k_rate_live_axon;
-            rate_values[diff_bound_index] = k_rate_boundary;
+            rate_values[diff_bound_index_a2e] = k_rate_boundary_a2e;
+            rate_values[diff_bound_index_e2a] = k_rate_boundary_e2a;
             rate_values[diff_dead_index] = k_rate_dead_axon;
             rate_values[diff_extra_index] = k_rate_extra;
             rate_values[diff_one_index] = 1;
@@ -329,7 +336,8 @@ namespace LHON_Form
                 axon_lbl[i] = new AxonLabelClass { lbl = "", x = xCenter, y = yCenter };
                 
 
-                float rc_1 = radiusCircle + process_clearance;
+                //float rc_1 = radiusCircle + process_clearance;
+                float rc_1 = radiusCircle + 1;
                 box_y_min[i] = Max((int)(yCenter - rc_1), 0);
                 box_y_max[i] = Min((int)(yCenter + rc_1), im_size - 1);
                 box_x_min[i] = Max((int)(xCenter - rc_1), 0);
@@ -413,7 +421,10 @@ namespace LHON_Form
                             
                             if (xy_inside != neigh_k_inside)
                             {
-                                rate[lin_idx] = diff_bound_index;
+                                if(xy_inside)
+                                    rate[lin_idx]  = diff_bound_index_a2e;
+                                else
+                                    rate[lin_idx] = diff_bound_index_e2a;
                                 axons_surr_rate[axons_surr_rate_idx[i + 1]++] = lin_idx;
                             }
                             else if (xy_inside)

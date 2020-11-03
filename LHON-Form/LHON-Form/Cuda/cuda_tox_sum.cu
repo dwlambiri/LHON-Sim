@@ -6,7 +6,7 @@ extern "C" __global__  void cuda_tox_sum(int* pix_idx, int pix_idx_num, float* t
 	{
 		int xy = pix_idx[idx];
 		if (no3dLayers) {
-			int sum = 0;
+			float sum = 0;
 			for (int i = 0; i < no3dLayers; i++) {
 				sum += tox[((offset + i) % (no3dLayers + 2))*imsquare + xy];
 			}

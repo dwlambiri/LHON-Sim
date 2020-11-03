@@ -1,9 +1,16 @@
 ﻿
-#define diff_live_index 1
-#define diff_bound_index 2
-#define diff_dead_index 3
-#define diff_extra_index 4
+#define diff_extra_index 5
 //#define rate_dimensions 4
+/*
+* [DWL] Need to keep the constants in this file in line with the values in preprocess.cs!!
+private readonly byte diff_zero_index = 0;
+private readonly byte diff_live_index = 1;
+private readonly byte diff_bound_index_a2e = 2;
+private readonly byte diff_bound_index_e2a = 3;
+private readonly byte diff_dead_index = 4;
+private readonly byte diff_extra_index = 5;
+private readonly byte diff_one_index = 6;
+*/
 
 extern "C" __global__  void cuda_prep0(unsigned short im_size, int nerve_cent_pix, int nerve_r_pix_2, int vein_r_pix_2, float k_rate_extra, float k_detox_extra,
 	unsigned char* pix_out_of_nerve, unsigned char* rate, float* detox, unsigned int rate_dimensions)
