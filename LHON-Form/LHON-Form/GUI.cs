@@ -413,7 +413,9 @@ namespace LHON_Form
             txt_rate_bound_e2a.TextChanged += (s, e) => setts.rate_bound_e2a = Read_float(s);
             txt_rate_dead.TextChanged += (s, e) => setts.rate_dead = Read_float(s);
             txt_rate_extra.TextChanged += (s, e) => setts.rate_extra = Read_float(s);
+            txt_rate_extra_z.TextChanged += (s, e) => setts.rate_extra_z = Read_float(s);
             txt_rate_live.TextChanged += (s, e) => setts.rate_live = Read_float(s);
+            txt_rate_live_z.TextChanged += (s, e) => setts.rate_live_z = Read_float(s);
             txt_tox_prod_rate.TextChanged += (s, e) => setts.tox_prod = Read_float(s);
             txt_death_tox_threshold.TextChanged += (s, e) => setts.death_tox_thres = Read_float(s);
             txt_var_death.TextChanged += (s, e) => setts.death_var_thr = Read_float(s);
@@ -696,9 +698,12 @@ namespace LHON_Form
             txt_detox_intra.Text = setts.detox_intra.ToString();
 
             txt_rate_bound_a2e.Text = setts.rate_bound_a2e.ToString();
+            txt_rate_bound_e2a.Text = setts.rate_bound_e2a.ToString();
             txt_rate_dead.Text = setts.rate_dead.ToString();
             txt_rate_extra.Text = setts.rate_extra.ToString();
+            txt_rate_extra_z.Text = setts.rate_extra_z.ToString();
             txt_rate_live.Text = setts.rate_live.ToString();
+            txt_rate_live_z.Text = setts.rate_live_z.ToString();
 
             txt_tox_prod_rate.Text = setts.tox_prod.ToString();
             txt_death_tox_threshold.Text = setts.death_tox_thres.ToString();

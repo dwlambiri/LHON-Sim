@@ -38,7 +38,7 @@ namespace LHON_Form
         */
 
         private float k_detox_intra, k_detox_extra, k_tox_prod, death_tox_thres, death_var_thr, insult_tox, on_death_tox,
-            k_rate_live_axon, k_rate_boundary_a2e, k_rate_boundary_e2a, k_rate_dead_axon, k_rate_extra;
+            k_rate_live_axon, k_rate_boundary_a2e, k_rate_boundary_e2a, k_rate_dead_axon, k_rate_extra, k_rate_live_axon_z, k_rate_extra_z;
 
 
         // ====================================
@@ -75,8 +75,10 @@ namespace LHON_Form
         private readonly byte diff_bound_index_e2a = 3;
         private readonly byte diff_dead_index = 4;
         private readonly byte diff_extra_index = 5;
-        private readonly byte diff_one_index = 6;
-        private readonly byte diff_values_size = 7;
+        private readonly byte diff_live_z_index = 6;
+        private readonly byte diff_extra_z_index = 7;
+        private readonly byte diff_one_index = 8;
+        private readonly byte diff_values_size = 9;
 
         private readonly uint rateUpLayerIndex = 4;
         private readonly uint rateDownLayerIndex = 5;
@@ -122,6 +124,8 @@ namespace LHON_Form
             if (setts.rate_live > upperValue_c ||
                 setts.rate_bound_a2e > upperValue_c ||
                 setts.rate_bound_e2a > upperValue_c ||
+                setts.rate_live_z > upperValue_c ||
+                setts.rate_extra_z > upperValue_c ||
                 setts.rate_dead > upperValue_c ||
                 setts.rate_extra > upperValue_c)
             {
@@ -134,6 +138,8 @@ namespace LHON_Form
                 setts.rate_bound_a2e < lowerValue_c ||
                 setts.rate_bound_e2a < lowerValue_c ||
                 setts.rate_dead < lowerValue_c ||
+                setts.rate_live_z < lowerValue_c ||
+                setts.rate_extra_z < lowerValue_c ||
                 setts.rate_extra < lowerValue_c)
             {
                 Append_stat_ln("Error: Diffusion param less  than " + lowerValue_c.ToString() + ". Results are undetermined.");
@@ -161,16 +167,20 @@ namespace LHON_Form
 
             // User inputs 0 to 1 for rate values 
             k_rate_live_axon = setts.rate_live / fiveF * rate_conv;
+            k_rate_live_axon_z = setts.rate_live_z / fiveF * rate_conv;
             k_rate_boundary_a2e = setts.rate_bound_a2e / fiveF * rate_conv;
             k_rate_boundary_e2a = setts.rate_bound_e2a / fiveF * rate_conv;
             k_rate_dead_axon = setts.rate_dead / fiveF * rate_conv;
             k_rate_extra = setts.rate_extra / fiveF * rate_conv;
+            k_rate_extra_z = setts.rate_extra_z / fiveF * rate_conv;
 
-            if (k_rate_live_axon > 0.25 || 
+            if (k_rate_live_axon > 0.25 ||
+                k_rate_live_axon_z > 0.25 ||
                 k_rate_boundary_a2e > 0.25 ||
                 k_rate_boundary_e2a > 0.25 ||
                 k_rate_dead_axon > 0.25 ||
-                k_rate_extra > 0.25)
+                k_rate_extra > 0.25 ||
+                k_rate_extra_z > 0.25)
             {
                 Append_stat_ln("Error: Diffusion param greater than 0.25. Results are undetermined.");
                 //return;
@@ -221,7 +231,11 @@ namespace LHON_Form
             rate_values[diff_bound_index_e2a] = k_rate_boundary_e2a;
             rate_values[diff_dead_index] = k_rate_dead_axon;
             rate_values[diff_extra_index] = k_rate_extra;
+            rate_values[diff_live_z_index] = k_rate_live_axon_z;
+            rate_values[diff_extra_z_index] = k_rate_extra_z;
             rate_values[diff_one_index] = 1;
+
+
             detox = new float[imsquare];
             tox = new float[imsquare];
             tox_prod = new float[imsquare];
@@ -287,7 +301,7 @@ namespace LHON_Form
 
             //preprocessGPUVar.CopyToDevice(rate_values, rate_values_dev);
 
-            preprocessGPUVar.Launch(grid_siz_prep, block_siz_prep).cuda_prep0(im_size, nerve_cent_pix, nerve_r_pix_2, vein_r_pix_2, k_rate_extra, k_detox_extra,
+            preprocessGPUVar.Launch(grid_siz_prep, block_siz_prep).cuda_prep0(im_size, nerve_cent_pix, nerve_r_pix_2, vein_r_pix_2,k_detox_extra,
                 pix_out_of_nerve_dev, rate_dev, detox_dev, pixelNeighbourNumbers);
 
             preprocessGPUVar.Synchronize();
@@ -435,9 +449,9 @@ namespace LHON_Form
                         }
                         if (xy_inside  && setts.no3dLayers > 0)
                         {
-                            rate[lin_idx_base + rateDownLayerIndex] = diff_live_index;
+                            rate[lin_idx_base + rateDownLayerIndex] = diff_live_z_index;
                             axons_surr_rate[axons_surr_rate_idx[i + 1]++] = lin_idx_base + rateDownLayerIndex;
-                            rate[lin_idx_base + rateUpLayerIndex] = diff_live_index;
+                            rate[lin_idx_base + rateUpLayerIndex] = diff_live_z_index;
                             axons_surr_rate[axons_surr_rate_idx[i + 1]++] = lin_idx_base + rateUpLayerIndex;
                         }
                     }

@@ -57,10 +57,12 @@ namespace LHON_Form
             public float resolution;
 
             public float rate_live;
+            public float rate_live_z;
             public float rate_dead;
             public float rate_bound_a2e;
             public float rate_bound_e2a;
             public float rate_extra;
+            public float rate_extra_z;
             
             public float tox_prod;
             public float on_death_tox;
