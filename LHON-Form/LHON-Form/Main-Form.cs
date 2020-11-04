@@ -70,7 +70,7 @@ namespace LHON_Form
 
             if (iteration == 0)
             {
-                Load_gpu_from_cpu();
+                Load_gpu_from_cpu(gpu);
                 tt_sim.Restart();
                 Tic();
                 dt = 1F / Pow2(setts.resolution);

@@ -112,6 +112,7 @@ namespace LHON_Form
 
 
 
+            headLayer = 2;
             // =======================================
             //              Init Parameters
             // =======================================
@@ -179,9 +180,25 @@ namespace LHON_Form
 
             int imsquare = im_size * im_size;
 
+            int maxNumPlanes = 2147483647/4 / imsquare;
+
+            if(maxNumPlanes < setts.no3dLayers+2)
+            {
+                setts.no3dLayers = maxNumPlanes-4;
+                Append_stat_ln("Warning: Too many planes! Can only allocate " + setts.no3dLayers);
+            }
+
+            int max_pixels_in_nerve = (int)(Pow2(mdl_nerve_r * res) * (1 - Pow2(mdl_vessel_ratio)) * Math.PI);
+
             pixelNeighbourNumbers = setts.no3dLayers != 0 ? (int)space_neighbours : (int)plane_neighbours;
 
-            float neighbourPlus1 = pixelNeighbourNumbers+1;
+            if (2147483647 / 4 / max_pixels_in_nerve < pixelNeighbourNumbers)
+            {
+                Append_stat_ln("Fatal Error: Model too large. Aborting preprocess... ");
+                return;
+            }
+
+                float neighbourPlus1 = pixelNeighbourNumbers+1;
             float limitDiff = 1 / neighbourPlus1;
 
             // User inputs 0 to 1 for rate values 
@@ -258,8 +275,7 @@ namespace LHON_Form
 
             axon_is_alive = axon_is_alive_init = Enumerable.Repeat(true, mdl.n_axons).ToArray(); // init to true
 
-            // temp variable
-            int max_pixels_in_nerve = (int)(Pow2(mdl_nerve_r * res) * (1 - Pow2(mdl_vessel_ratio)) * Math.PI);
+            // temp variable 
 
             //Append_stat_ln("Info: imsize is" + im_size + "  mdl*res " + (mdl_nerve_r * res));
 
@@ -495,7 +511,7 @@ namespace LHON_Form
             // variable size study
             //((rate.Length + tox.Length + detox.Length + tox_prod.Length + axon_mask.Length + axon_is_alive.Length)*4)/1024/1024 // MB
 
-            Load_gpu_from_cpu();
+            //Load_gpu_from_cpu();
 
             Update_bottom_stat("Preprocess Done! (" + (Toc() / 1000).ToString("0.0") + " secs)");
             // Debug.WriteLine("inside: {0} vs allocated {1}", axons_inside_pix_idx[mdl.n_axons - 1], axons_inside_pix.Length);

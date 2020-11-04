@@ -58,12 +58,18 @@ namespace LHON_Form
         private void Load_gpu_from_cpu()
         {
             GPGPU gpuLocal = CudafyHost.GetDevice(CudafyModes.Target, CudafyModes.DeviceId);
+            Load_gpu_from_cpu(gpuLocal);
+                    
+        }
 
+
+        private void Load_gpu_from_cpu(GPGPU gpuLocal)
+        {
             gpuLocal.FreeAll(); gpuLocal.Synchronize();
 
             int imsq = im_size * im_size;
 
-            tox_dev = gpuLocal.Allocate<float>((2+ setts.no3dLayers)*imsq); gpuLocal.Set(tox_dev); gpuLocal.CopyToDevice(tox, 0, tox_dev, (setts.no3dLayers>0)? headLayer*imsq:0, tox.Length);
+            tox_dev = gpuLocal.Allocate<float>((2 + setts.no3dLayers) * imsq); gpuLocal.Set(tox_dev); gpuLocal.CopyToDevice(tox, 0, tox_dev, (setts.no3dLayers > 0) ? headLayer * imsq : 0, tox.Length);
             //tox_new_dev = gpuLocal.Allocate<float>(im_size * im_size); gpuLocal.Set(tox_new_dev);
 
             rate_dev = gpuLocal.Allocate(rate); gpuLocal.CopyToDevice(rate, rate_dev);
@@ -100,7 +106,7 @@ namespace LHON_Form
             blocks_per_grid_1D_axons = mdl.n_axons / threads_per_block_1D + 1;
 
             show_opts_dev = gpuLocal.Allocate(show_opts); gpuLocal.CopyToDevice(show_opts, show_opts_dev);
-            
+
             axons_inside_pix_dev = gpuLocal.Allocate(axons_inside_pix); gpuLocal.CopyToDevice(axons_inside_pix, axons_inside_pix_dev);
             axons_inside_pix_idx_dev = gpuLocal.Allocate(axons_inside_pix_idx); gpuLocal.CopyToDevice(axons_inside_pix_idx, axons_inside_pix_idx_dev);
 
@@ -111,8 +117,10 @@ namespace LHON_Form
 
             gpuLocal.Synchronize();
 
-            Debug.WriteLine("GPU used memory: " + (100.0 * (1 - (double)gpuLocal.FreeMemory / (double)gpuLocal.TotalMemory)).ToString("0.0") + " %\n");
+            Append_stat_ln("GPU used memory: " + (100.0 * (1 - (double)gpuLocal.FreeMemory / (double)gpuLocal.TotalMemory)).ToString("0.0") + " %\n");
+
         }
+
         /*
         private void load_cpu_from_gpu()
         {

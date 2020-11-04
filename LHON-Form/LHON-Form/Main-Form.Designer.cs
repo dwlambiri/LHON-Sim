@@ -520,7 +520,7 @@ namespace LHON_Form
             this.groupBox7.Size = new System.Drawing.Size(718, 262);
             this.groupBox7.TabIndex = 35;
             this.groupBox7.TabStop = false;
-            this.groupBox7.Text = "Diffusion Rates (=v*(res/10)^2/(neigh+1) input range: [0..1]";
+            this.groupBox7.Text = "Diffusion Rates (=v*(dimScale)/(neigh+1)) input range: [0..1]";
             // 
             // tableLayoutPanel2
             // 

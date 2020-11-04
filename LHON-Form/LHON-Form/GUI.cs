@@ -599,10 +599,10 @@ namespace LHON_Form
                         txt_rate_extra_z.Enabled = true;
                         txt_rate_live_z.Enabled = true;
                     }
-                    Append_stat_ln("Info: Number of layers changed. Calling preprocess.....");
-                    Preprocess_model();
-                    Append_stat_ln("Info: Preprocessing complete.");
-                    Set_btn_start_txt("&Start", System.Drawing.Color.Green); btn_start.Enabled = true;
+                    Append_stat_ln("Info: Number of layers changed. Call preprocess next.....");
+                    //Preprocess_model();
+                    //Append_stat_ln("Info: Preprocessing complete.");
+                    Set_btn_start_txt("&Start", System.Drawing.Color.Gray); btn_start.Enabled = false;
                 }
                 else
                 {
