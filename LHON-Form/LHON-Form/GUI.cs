@@ -86,6 +86,7 @@ namespace LHON_Form
                 {
                     Append_stat_ln("Info: Calling preprocess.....");
                     Preprocess_model();
+                    Set_btn_start_txt("&Start", System.Drawing.Color.Green); btn_start.Enabled = true;
                     Append_stat_ln("Info: Preprocessing complete.");
                     return;
                 }
@@ -94,7 +95,7 @@ namespace LHON_Form
                     Append_stat_ln("Warning: You must stop the simulation before resetting the states.");
                     return;
                 }
-                Reset_state(); Set_btn_start_txt("&Start", System.Drawing.Color.Green);
+                Reset_state(); Set_btn_start_txt("&Start", System.Drawing.Color.Green); btn_start.Enabled = true;
                 Update_bottom_stat("Simulation state was reset!");
             };
 
@@ -102,64 +103,12 @@ namespace LHON_Form
             {
                 if (sim_stat == Sim_stat_enum.None || sim_stat == Sim_stat_enum.Paused)
                 {
-                    txt_3d_layers.Enabled = false;
-                    txt_3d_tox_start.Enabled = false;
-                    txt_3d_tox_stop.Enabled = false;
-                    btn_preprocess.Enabled = false;
-                    btn_reset.Enabled = false;
-                    btn_load_setts.Enabled = false;
-                    btn_load_model.Enabled = false;
-                    btn_redraw.Enabled = false;
-                    txt_resolution.Enabled = false;
-                    txt_nerve_scale.Enabled = false;
-                    txt_death_tox_threshold.Enabled= false;
-                    txt_detox_extra.Enabled = false;
-                    txt_detox_intra.Enabled = false;
-                    txt_on_death_tox.Enabled = false;
-                    txt_rate_bound_a2e.Enabled = false;
-                    txt_rate_bound_e2a.Enabled = false;
-                    txt_rate_dead.Enabled = false;
-                    txt_rate_extra.Enabled = false;
-                    txt_rate_extra_z.Enabled = false;
-                    txt_rate_live.Enabled = false;
-                    txt_rate_live_z.Enabled = false;
-                    txt_tox_prod_rate.Enabled = false;
-                    txt_var_death.Enabled = false;
-                    chk_var_death.Enabled = false;
-                    chk_strict_rad.Enabled = false;
-                    txt_clearance.Enabled = false;
-
+                    
                     Start_sim();
                 }
                 else if (sim_stat == Sim_stat_enum.Running)
                 {
                     Stop_sim(Sim_stat_enum.Paused);
-                    txt_3d_layers.Enabled = true;
-                    txt_3d_tox_start.Enabled = true;
-                    txt_3d_tox_stop.Enabled = true;
-                    btn_preprocess.Enabled = true;
-                    btn_reset.Enabled = true;
-                    btn_load_setts.Enabled = true;
-                    btn_load_model.Enabled = true;
-                    btn_redraw.Enabled = true;
-                    txt_resolution.Enabled = true;
-                    txt_nerve_scale.Enabled = true;
-                    txt_death_tox_threshold.Enabled = true;
-                    txt_detox_extra.Enabled = true;
-                    txt_detox_intra.Enabled = true;
-                    txt_on_death_tox.Enabled = true;
-                    txt_rate_bound_a2e.Enabled = true;
-                    txt_rate_bound_e2a.Enabled = true;
-                    txt_rate_dead.Enabled = true;
-                    txt_rate_extra.Enabled = true;
-                    txt_rate_extra_z.Enabled = true;
-                    txt_rate_live.Enabled = true;
-                    txt_rate_live_z.Enabled = true;
-                    txt_tox_prod_rate.Enabled = true;
-                    txt_var_death.Enabled = true;
-                    chk_var_death.Enabled = true;
-                    chk_strict_rad.Enabled = true;
-                    txt_clearance.Enabled = true;
                 } 
             };
 
@@ -177,7 +126,7 @@ namespace LHON_Form
                 Append_stat_ln("Info: Preprocessing model.");
                 Preprocess_model();
                 Append_stat_ln("Info: Preprocessing done.");
-                Set_btn_start_txt("&Start", System.Drawing.Color.Green);
+                Set_btn_start_txt("&Start", System.Drawing.Color.Green); btn_start.Enabled = true;
             };
 
             btn_clr.Click += (s, e) => txt_status.Text = "";
@@ -304,12 +253,66 @@ namespace LHON_Form
             }
             if (sim_stat == Sim_stat_enum.None || sim_stat == Sim_stat_enum.Stopped || sim_stat == Sim_stat_enum.Successful || sim_stat == Sim_stat_enum.Failed)
             {
+                txt_3d_layers.Enabled = false;
+                txt_3d_tox_start.Enabled = false;
+                txt_3d_tox_stop.Enabled = false;
+                btn_preprocess.Enabled = false;
+                btn_reset.Enabled = false;
+                btn_load_setts.Enabled = false;
+                btn_load_model.Enabled = false;
+                btn_redraw.Enabled = false;
+                txt_resolution.Enabled = false;
+                txt_nerve_scale.Enabled = false;
+                txt_death_tox_threshold.Enabled = false;
+                txt_detox_extra.Enabled = false;
+                txt_detox_intra.Enabled = false;
+                txt_on_death_tox.Enabled = false;
+                txt_rate_bound_a2e.Enabled = false;
+                txt_rate_bound_e2a.Enabled = false;
+                txt_rate_dead.Enabled = false;
+                txt_rate_extra.Enabled = false;
+                txt_rate_extra_z.Enabled = false;
+                txt_rate_live.Enabled = false;
+                txt_rate_live_z.Enabled = false;
+                txt_tox_prod_rate.Enabled = false;
+                txt_var_death.Enabled = false;
+                chk_var_death.Enabled = false;
+                chk_strict_rad.Enabled = false;
+                txt_clearance.Enabled = false;
+
                 sim_stat = Sim_stat_enum.Running;
                 alg_worker.RunWorkerAsync();
                 Set_btn_start_txt("&Pause", System.Drawing.Color.DarkRed);
                 Update_bottom_stat("Simulation is Running");
             } else if(sim_stat == Sim_stat_enum.Paused)
             {
+                txt_3d_layers.Enabled = false;
+                txt_3d_tox_start.Enabled = false;
+                txt_3d_tox_stop.Enabled = false;
+                btn_preprocess.Enabled = false;
+                btn_reset.Enabled = false;
+                btn_load_setts.Enabled = false;
+                btn_load_model.Enabled = false;
+                btn_redraw.Enabled = false;
+                txt_resolution.Enabled = false;
+                txt_nerve_scale.Enabled = false;
+                txt_death_tox_threshold.Enabled = false;
+                txt_detox_extra.Enabled = false;
+                txt_detox_intra.Enabled = false;
+                txt_on_death_tox.Enabled = false;
+                txt_rate_bound_a2e.Enabled = false;
+                txt_rate_bound_e2a.Enabled = false;
+                txt_rate_dead.Enabled = false;
+                txt_rate_extra.Enabled = false;
+                txt_rate_extra_z.Enabled = false;
+                txt_rate_live.Enabled = false;
+                txt_rate_live_z.Enabled = false;
+                txt_tox_prod_rate.Enabled = false;
+                txt_var_death.Enabled = false;
+                chk_var_death.Enabled = false;
+                chk_strict_rad.Enabled = false;
+                txt_clearance.Enabled = false;
+
                 sim_stat = Sim_stat_enum.Running;
                 Set_btn_start_txt("&Pause",  System.Drawing.Color.DarkRed);
                 Update_bottom_stat("Simulation is Running");
@@ -318,18 +321,56 @@ namespace LHON_Form
 
         private void Stop_sim(Sim_stat_enum stat)
         {
-            if (sim_stat == Sim_stat_enum.Running)
+            if (InvokeRequired)
+                Invoke(new Action(() => Stop_sim(stat)));
+            else
             {
-                sim_stat = stat;
-                if (sim_stat == Sim_stat_enum.Paused) Set_btn_start_txt("&Continue", System.Drawing.Color.Green);
-                else Set_btn_start_txt("&Start", System.Drawing.Color.Green);
-
-                Update_bottom_stat("Simulation is " + sim_stat.ToString());
-            }else if(sim_stat == Sim_stat_enum.Paused)
-            {
-                sim_stat = stat;
-                Set_btn_start_txt("&Start", System.Drawing.Color.Green);
-                Update_bottom_stat("Simulation is " + sim_stat.ToString());
+                if (sim_stat == Sim_stat_enum.Running)
+                {
+                    sim_stat = stat;
+                    if (sim_stat == Sim_stat_enum.Paused)
+                    {
+                        Set_btn_start_txt("&Continue", System.Drawing.Color.Green);
+                    }
+                    else
+                    {
+                        Set_btn_start_txt("&Start", System.Drawing.Color.Gray);
+                        btn_start.Enabled = false;
+                    }
+                    Update_bottom_stat("Simulation is " + sim_stat.ToString());
+                }
+                else if (sim_stat == Sim_stat_enum.Paused)
+                {
+                    sim_stat = stat;
+                    Set_btn_start_txt("&Start", System.Drawing.Color.Green);
+                    Update_bottom_stat("Simulation is " + sim_stat.ToString());
+                }
+                txt_3d_layers.Enabled = true;
+                txt_3d_tox_start.Enabled = true;
+                txt_3d_tox_stop.Enabled = true;
+                btn_preprocess.Enabled = true;
+                btn_reset.Enabled = true;
+                btn_load_setts.Enabled = true;
+                btn_load_model.Enabled = true;
+                btn_redraw.Enabled = true;
+                txt_resolution.Enabled = true;
+                txt_nerve_scale.Enabled = true;
+                txt_death_tox_threshold.Enabled = true;
+                txt_detox_extra.Enabled = true;
+                txt_detox_intra.Enabled = true;
+                txt_on_death_tox.Enabled = true;
+                txt_rate_bound_a2e.Enabled = true;
+                txt_rate_bound_e2a.Enabled = true;
+                txt_rate_dead.Enabled = true;
+                txt_rate_extra.Enabled = true;
+                if(setts.no3dLayers>0) txt_rate_extra_z.Enabled = true;
+                txt_rate_live.Enabled = true;
+                if(setts.no3dLayers >0) txt_rate_live_z.Enabled = true;
+                txt_tox_prod_rate.Enabled = true;
+                txt_var_death.Enabled = true;
+                chk_var_death.Enabled = true;
+                chk_strict_rad.Enabled = true;
+                txt_clearance.Enabled = true;
             }
         }
         // ====================================================================
@@ -481,18 +522,24 @@ namespace LHON_Form
             // Model parameters
             txt_nerve_scale.TextChanged += (s, e) =>
             {
+                preprocessDone = false;
+                sim_stat = Sim_stat_enum.None;
+
                 mdl.nerve_scale_ratio = Read_float(s) / 100F;
                 lbl_nerve_siz.Text = (mdl.nerve_scale_ratio * mdl_real_nerve_r * 2).ToString(".0") + " um";
+
+                Append_stat_ln("Warning: Scale change. Uninitialized model!");
             };
 
             // Preprocess parameters
 
             txt_resolution.TextChanged += (s, e) =>
             {
-
+                preprocessDone = false;
+                sim_stat = Sim_stat_enum.None;
                 setts.resolution = Read_float(s);
 
-
+                Append_stat_ln("Warning: Resolution change. Unititialized model!");
             };
 
             txt_rec_interval.TextChanged += (s, e) => {
@@ -526,7 +573,7 @@ namespace LHON_Form
 
             txt_3d_layers.TextChanged += (s, e) =>
             {
-                if (sim_stat == Sim_stat_enum.None || sim_stat == Sim_stat_enum.Paused)
+                if (sim_stat != Sim_stat_enum.Running && sim_stat != Sim_stat_enum.Paused)
                 {
                     setts.no3dLayers = Read_int(s);
                     sox_track_bar_xy.Maximum = setts.no3dLayers;
@@ -541,16 +588,21 @@ namespace LHON_Form
                         xy_direction_button.Enabled = true;
                         xz_direction_button.Enabled = false;
                         yz_direction_button.Enabled = false;
+                        txt_rate_extra_z.Enabled = false;
+                        txt_rate_live_z.Enabled = false;
                     }
                     else
                     {
                         xy_direction_button.Enabled = true;
                         xz_direction_button.Enabled = true;
                         yz_direction_button.Enabled = true;
+                        txt_rate_extra_z.Enabled = true;
+                        txt_rate_live_z.Enabled = true;
                     }
                     Append_stat_ln("Info: Number of layers changed. Calling preprocess.....");
                     Preprocess_model();
                     Append_stat_ln("Info: Preprocessing complete.");
+                    Set_btn_start_txt("&Start", System.Drawing.Color.Green); btn_start.Enabled = true;
                 }
                 else
                 {
@@ -561,7 +613,7 @@ namespace LHON_Form
 
             txt_3d_tox_start.TextChanged += (s, e) =>
             {
-                if (sim_stat == Sim_stat_enum.None || sim_stat == Sim_stat_enum.Paused)
+                if (sim_stat != Sim_stat_enum.Running && sim_stat != Sim_stat_enum.Paused)
                 {
                     setts.toxLayerStart = Read_int(s);
                     Append_stat_ln("Info: Position of start SOX layer changed. Using previous preprocessing.");
@@ -570,7 +622,7 @@ namespace LHON_Form
 
             txt_3d_tox_stop.TextChanged += (s, e) =>
             {
-                if (sim_stat == Sim_stat_enum.None || sim_stat == Sim_stat_enum.Paused)
+                if (sim_stat != Sim_stat_enum.Running && sim_stat != Sim_stat_enum.Paused)
                 {
                     setts.toxLayerStop = Read_int(s);
                     Append_stat_ln("Info: Position of stop SOX layer changed. Using previous preprocessing.");

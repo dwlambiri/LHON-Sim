@@ -121,7 +121,9 @@ namespace LHON_Form
             float res = setts.resolution;
             mdl_nerve_r = mdl.nerve_scale_ratio * mdl_real_nerve_r;
 
-            float rate_conv = Pow2(res / min_res_c);
+            float rate_conv_2d = Pow2(res / min_res_c);
+            float rate_conv_lin = res / min_res_c;
+
             float upperValue_c = 1F;
             if (setts.rate_live > upperValue_c ||
                 setts.rate_bound_a2e > upperValue_c ||
@@ -165,26 +167,41 @@ namespace LHON_Form
             k_detox_extra = 1F - setts.detox_extra;
             k_tox_prod = 2*setts.tox_prod / Pow2(res);
 
-            float fiveF = 5F;
+            prep_prof.Time(0);
+            Tic();
+
+            Update_bottom_stat("Preprocessing ...");
+
+            im_size = Calc_im_siz();
+            Update_image_siz_lbl();
+
+            Init_bmp_write();
+
+            int imsquare = im_size * im_size;
+
+            pixelNeighbourNumbers = setts.no3dLayers != 0 ? (int)space_neighbours : (int)plane_neighbours;
+
+            float neighbourPlus1 = pixelNeighbourNumbers+1;
+            float limitDiff = 1 / neighbourPlus1;
 
             // User inputs 0 to 1 for rate values 
-            k_rate_live_axon = setts.rate_live / fiveF * rate_conv;
-            k_rate_live_axon_z = setts.rate_live_z / fiveF * rate_conv;
-            k_rate_boundary_a2e = setts.rate_bound_a2e / fiveF * rate_conv;
-            k_rate_boundary_e2a = setts.rate_bound_e2a / fiveF * rate_conv;
-            k_rate_dead_axon = setts.rate_dead / fiveF * rate_conv;
-            k_rate_extra = setts.rate_extra / fiveF * rate_conv;
-            k_rate_extra_z = setts.rate_extra_z / fiveF * rate_conv;
+            k_rate_live_axon = setts.rate_live / neighbourPlus1 * rate_conv_2d;
+            k_rate_live_axon_z = setts.rate_live_z / neighbourPlus1 * rate_conv_lin;
+            k_rate_boundary_a2e = setts.rate_bound_a2e / neighbourPlus1 * rate_conv_2d;
+            k_rate_boundary_e2a = setts.rate_bound_e2a / neighbourPlus1 * rate_conv_2d;
+            k_rate_dead_axon = setts.rate_dead / neighbourPlus1 * rate_conv_2d;
+            k_rate_extra = setts.rate_extra / neighbourPlus1 * rate_conv_2d;
+            k_rate_extra_z = setts.rate_extra_z / neighbourPlus1 * rate_conv_lin;
 
-            if (k_rate_live_axon > 0.25 ||
-                k_rate_live_axon_z > 0.25 ||
-                k_rate_boundary_a2e > 0.25 ||
-                k_rate_boundary_e2a > 0.25 ||
-                k_rate_dead_axon > 0.25 ||
-                k_rate_extra > 0.25 ||
-                k_rate_extra_z > 0.25)
+            if (k_rate_live_axon > limitDiff ||
+                k_rate_live_axon_z > limitDiff ||
+                k_rate_boundary_a2e > limitDiff ||
+                k_rate_boundary_e2a > limitDiff ||
+                k_rate_dead_axon > limitDiff ||
+                k_rate_extra > limitDiff ||
+                k_rate_extra_z > limitDiff)
             {
-                Append_stat_ln("Error: Diffusion param greater than 0.25. Results are undetermined.");
+                Append_stat_ln("Error: Diffusion param greater than " + limitDiff + " Results are undetermined.");
                 //return;
             }
 
@@ -208,21 +225,9 @@ namespace LHON_Form
                 // Append_stat_ln("Info: All axons will die...");
             }
 
-            prep_prof.Time(0);
-            Tic();
-
-            Update_bottom_stat("Preprocessing ...");
-
-            im_size = Calc_im_siz();
-            Update_image_siz_lbl();
-
-            Init_bmp_write();
+            
 
             // ======== Pixel Properties =========
-
-            int imsquare = im_size * im_size;
-
-            pixelNeighbourNumbers = setts.no3dLayers !=0 ? (int)space_neighbours : (int)plane_neighbours;
 
             rate = new byte[imsquare * pixelNeighbourNumbers];
             rate_values = new float[diff_values_size];
@@ -318,6 +323,7 @@ namespace LHON_Form
                     pix_idx[pix_idx_num++] = idx;
 
             prep_prof.Time(2);
+
 
             float[,] AxCorPix = new float[mdl.n_axons, 3]; // axon coordinate in pixels
 
@@ -440,6 +446,7 @@ namespace LHON_Form
                                     rate[lin_idx]  = diff_bound_index_a2e;
                                 else
                                     rate[lin_idx] = diff_bound_index_e2a;
+                               
                                 axons_surr_rate[axons_surr_rate_idx[i + 1]++] = lin_idx;
                             }
                             else if (xy_inside)
@@ -487,6 +494,8 @@ namespace LHON_Form
 
             // variable size study
             //((rate.Length + tox.Length + detox.Length + tox_prod.Length + axon_mask.Length + axon_is_alive.Length)*4)/1024/1024 // MB
+
+            Load_gpu_from_cpu();
 
             Update_bottom_stat("Preprocess Done! (" + (Toc() / 1000).ToString("0.0") + " secs)");
             // Debug.WriteLine("inside: {0} vs allocated {1}", axons_inside_pix_idx[mdl.n_axons - 1], axons_inside_pix.Length);
