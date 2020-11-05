@@ -372,8 +372,8 @@ namespace LHON_Form
                 axon_is_init_insult[i] = Pow2(insult_r - mdl.axon_coor[i][2]) > Pow2(insult_x - mdl.axon_coor[i][0]) + Pow2(insult_y - mdl.axon_coor[i][1]);
 
                 // Change coordinates from um to pixels
-                float xCenter = nerve_cent_pix + mdl.axon_coor[i][0] * res;
-                float yCenter = nerve_cent_pix + mdl.axon_coor[i][1] * res;
+                float xCenter = (float) Math.Round(nerve_cent_pix + mdl.axon_coor[i][0] * res,0);
+                float yCenter = (float) Math.Round(nerve_cent_pix + mdl.axon_coor[i][1] * res, 0);
                 float radiusCircle = mdl.axon_coor[i][2] * res;
                 AxCorPix[i, 0] = xCenter; AxCorPix[i, 1] = yCenter; AxCorPix[i, 2] = radiusCircle;
                 death_itr[i] = 0;
@@ -388,10 +388,10 @@ namespace LHON_Form
                 box_y_max[i] = Min((int)Math.Ceiling(yCenter + rc_1), im_size - 1);
                 box_x_min[i] = Max((int)Math.Floor(xCenter - rc_1), 0);
                 box_x_max[i] = Min((int)Math.Ceiling(xCenter + rc_1), im_size - 1);
-                box_siz_x[i] = box_y_max[i] - box_y_min[i] + 2;
-                box_siz_y[i] = box_x_max[i] - box_x_min[i] + 2;
+                box_siz_x[i] = box_x_max[i] - box_x_min[i] + 2;
+                box_siz_y[i] = box_y_max[i] - box_y_min[i] + 2;
 
-                if(box_y_min[i] == box_y_max[i] || box_x_min[i] == box_x_max[i])
+                if(box_y_min[i] +1 == box_y_max[i] || box_x_min[i] +1 == box_x_max[i])
                 {
                     Append_stat_ln("Warning: Zero sized box " + i + " " + box_x_min[i] + " " + box_y_min[i]);
                 }
@@ -450,6 +450,14 @@ namespace LHON_Form
                 {
                     for (int x = box_x_min[i] + 1; x < box_x_max[i]; x++)
                     {
+                        /*
+                        int bmin = box_x_min[i];
+                        int bmax = box_x_max[i];
+                        int bym = box_y_min[i];
+                        int bymax = box_y_max[i];
+                        int bxs = box_siz_x[i];
+                        int bys = box_siz_y[i];
+                        */
                         int x_rel = x - box_x_min[i];
                         int y_rel = y - box_y_min[i];
                         //[DWL] This must be in the same order as used in 
