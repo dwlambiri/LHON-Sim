@@ -112,7 +112,7 @@ namespace LHON_Form
                 } 
             };
 
-            btn_redraw.Click += (s, e) => { // [DWL] Generate Model Button
+            btn_generate_model.Click += (s, e) => { // [DWL] Generate Model Button
                 if (sim_stat != Sim_stat_enum.Running && !new_model_worker.IsBusy)
                 {
                     Stop_sim(Sim_stat_enum.Stopped);
@@ -451,24 +451,35 @@ namespace LHON_Form
             // Model parameters
             txt_nerve_scale.TextChanged += (s, e) =>
             {
-                preprocessDone = false;
-                sim_stat = Sim_stat_enum.None;
 
-                mdl.nerve_scale_ratio = Read_float(s) / 100F;
-                lbl_nerve_siz.Text = (mdl.nerve_scale_ratio * mdl_real_nerve_r * 2).ToString(".0") + " um";
+                if (sim_stat != Sim_stat_enum.Running)
+                {
+                    preprocessDone = false;
+                    sim_stat = Sim_stat_enum.None;
 
-                Append_stat_ln("Warning: Scale change. Uninitialized model!");
+                    mdl.nerve_scale_ratio = Read_float(s) / 100F;
+                    lbl_nerve_siz.Text = (mdl.nerve_scale_ratio * mdl_real_nerve_r * 2).ToString(".0") + " um";
+                    SimParamsChanged();
+                }
             };
 
             // Preprocess parameters
 
             txt_resolution.TextChanged += (s, e) =>
             {
-                preprocessDone = false;
-                sim_stat = Sim_stat_enum.None;
-                setts.resolution = Read_float(s);
+                
 
-                Append_stat_ln("Warning: Resolution change. Unititialized model!");
+                if (sim_stat != Sim_stat_enum.Running)
+                {
+                    preprocessDone = false;
+                    sim_stat = Sim_stat_enum.None;
+                    setts.resolution = Read_float(s);
+                    setts.no3dLayers = (int) (setts.resolution * Read_float(txt_3d_layers));
+                    setts.toxLayerStart = (int)(setts.resolution * Read_float(txt_3d_tox_start));
+                    setts.toxLayerStop = (int)(setts.resolution * Read_float(txt_3d_tox_stop));
+                    SimParamsChanged();
+                }
+
             };
 
             txt_rec_interval.TextChanged += (s, e) => {
@@ -564,7 +575,10 @@ namespace LHON_Form
                 if (sim_stat != Sim_stat_enum.Running)
                 {
                     Stop_sim(Sim_stat_enum.Stopped);
-                    setts.no3dLayers = Read_int(s);
+                    float layers = Read_int(s);
+                    setts.no3dLayers = (int)(setts.resolution * layers);
+                    setts.toxLayerStart = (int)(setts.resolution * Read_float(txt_3d_tox_start));
+                    setts.toxLayerStop = (int)(setts.resolution * Read_float(txt_3d_tox_stop));
                     if (setts.no3dLayers == 0)
                     {
                         xy_direction_button.Checked = true;
@@ -600,7 +614,9 @@ namespace LHON_Form
             {
                 if (sim_stat != Sim_stat_enum.Running)
                 {
-                    setts.toxLayerStart = Read_int(s);
+
+                    setts.toxLayerStart = (int)(setts.resolution * Read_float(s));
+                   
                     SimParamsChanged();
                 }
             };
@@ -609,7 +625,7 @@ namespace LHON_Form
             {
                 if (sim_stat != Sim_stat_enum.Running)
                 {
-                    setts.toxLayerStop = Read_int(s);
+                    setts.toxLayerStop = (int)(setts.resolution * Read_float(s));
                     SimParamsChanged();
                 }
             };
@@ -822,7 +838,7 @@ namespace LHON_Form
                 Load_model(FD.FileName);
                 Preprocess_model();
                 Append_stat_ln("Info: Preprocessing done.");
-                Set_btn_start_txt("&Start", System.Drawing.Color.Green);
+                Set_btn_start_txt("&Start", System.Drawing.Color.Green); btn_start.Enabled = true;
             };
 
             btn_save_setts.Click += (s, e) =>
@@ -876,7 +892,7 @@ namespace LHON_Form
                 btn_reset.Enabled = false;
                 btn_load_setts.Enabled = false;
                 btn_load_model.Enabled = false;
-                btn_redraw.Enabled = false;
+                btn_generate_model.Enabled = false;
                 txt_resolution.Enabled = false;
                 txt_nerve_scale.Enabled = false;
                 txt_death_tox_threshold.Enabled = false;
@@ -912,7 +928,7 @@ namespace LHON_Form
                 btn_reset.Enabled = true;
                 btn_load_setts.Enabled = true;
                 btn_load_model.Enabled = true;
-                btn_redraw.Enabled = true;
+                btn_generate_model.Enabled = true;
                 txt_resolution.Enabled = true;
                 txt_nerve_scale.Enabled = true;
                 txt_death_tox_threshold.Enabled = true;

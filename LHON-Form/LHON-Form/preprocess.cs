@@ -166,12 +166,14 @@ namespace LHON_Form
 
 
 
+            float prodConv = (setts.no3dLayers != 0) ? Pow2(res) * res : Pow2(res);
+            //float prodConv = Pow2(res);
             // "setts" are user input with physical units
 
             // 1 - real detox rate to reduce computation ->  tox[x_y] *= detox[x_y]
             k_detox_intra = 1F - setts.detox_intra;
             k_detox_extra = 1F - setts.detox_extra;
-            k_tox_prod = 2*setts.tox_prod / Pow2(res);
+            k_tox_prod = 2*setts.tox_prod / prodConv;
 
             prep_prof.Time(0);
             Tic();
@@ -204,7 +206,7 @@ namespace LHON_Form
                 return;
             }
 
-                float neighbourPlus1 = pixelNeighbourNumbers+1;
+            float neighbourPlus1 = pixelNeighbourNumbers+1;
             float limitDiff = 1 / neighbourPlus1;
 
             // User inputs 0 to 1 for rate values 
@@ -230,10 +232,10 @@ namespace LHON_Form
             }
 
             //
-            death_tox_thres = setts.death_tox_thres / Pow2(res);
+            death_tox_thres = setts.death_tox_thres / prodConv;
             death_var_thr = setts.death_var_thr;
-            insult_tox = setts.insult_tox / Pow2(res);
-            on_death_tox = setts.on_death_tox / Pow2(res);
+            insult_tox = setts.insult_tox / prodConv;
+            on_death_tox = setts.on_death_tox / prodConv;
 
             if(setts.death_tox_thres + setts.on_death_tox > 220/ res)
             {
@@ -372,6 +374,7 @@ namespace LHON_Form
                 axon_is_init_insult[i] = Pow2(insult_r - mdl.axon_coor[i][2]) > Pow2(insult_x - mdl.axon_coor[i][0]) + Pow2(insult_y - mdl.axon_coor[i][1]);
 
                 // Change coordinates from um to pixels
+                // [DWL] Using Round function instead of simple typecast
                 float xCenter = (float) Math.Round(nerve_cent_pix + mdl.axon_coor[i][0] * res,0);
                 float yCenter = (float) Math.Round(nerve_cent_pix + mdl.axon_coor[i][1] * res, 0);
                 float radiusCircle = mdl.axon_coor[i][2] * res;
@@ -383,6 +386,7 @@ namespace LHON_Form
                 
 
                 //float rc_1 = radiusCircle + process_clearance;
+                //[DWL] Changed cast from float to int to use floor ceiling
                 float rc_1 = radiusCircle + 1;
                 box_y_min[i] = Max((int)Math.Floor(yCenter - rc_1), 0);
                 box_y_max[i] = Min((int)Math.Ceiling(yCenter + rc_1), im_size - 1);
@@ -467,7 +471,7 @@ namespace LHON_Form
 
                         bool xy_inside = is_inside_this_axon[x_rel, y_rel];
                         uint lin_idx_base = xy_to_lin_idx(x, y) * (uint) pixelNeighbourNumbers;
-
+                        // [DWL] Fixed the rate setting for boundary
                         if(xy_inside)
                         {
                             for (uint k = 0; k < plane_neighbours; k++)
