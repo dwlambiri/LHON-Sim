@@ -1,4 +1,6 @@
 ﻿
+#define rateUpLayerIndex  4
+#define rateDownLayerIndex  5
 
 extern "C" __global__  void cuda_diffusion2(int* pix_idx, int pix_idx_num, unsigned short im_size,
 	float* tox, float* detox, float* tox_prod, unsigned char* rate, float* rate_values, int rate_dimensions, 
@@ -32,10 +34,10 @@ extern "C" __global__  void cuda_diffusion2(int* pix_idx, int pix_idx_num, unsig
 			(tox_old[xy3] - t) * rate_values[rate[xyN + 3]];
 
 		if(top == false)
-			tox_new[xy] += (tox_up[xy] - t) * rate_values[rate[xyN + 4]];
+			tox_new[xy] += (tox_up[xy] - t) * rate_values[rate[xyN + rateUpLayerIndex]];
 
 		if (bottom == false)
-			tox_new[xy] += (tox_down[xy] - t) * rate_values[rate[xyN + 5]];
+			tox_new[xy] += (tox_down[xy] - t) * rate_values[rate[xyN + rateDownLayerIndex]];
 
 		if(injury)
 			tox_new[xy] += tox_prod[xy];

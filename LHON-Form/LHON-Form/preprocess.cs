@@ -118,6 +118,8 @@ namespace LHON_Form
             // =======================================
 
             sim_stat = Sim_stat_enum.None;
+            ResetPlaneViewer();
+            DisableButtons();
 
             float res = setts.resolution;
             mdl_nerve_r = mdl.nerve_scale_ratio * mdl_real_nerve_r;
@@ -135,6 +137,7 @@ namespace LHON_Form
                 setts.rate_extra > upperValue_c)
             {
                 Append_stat_ln("Error: Diffusion param greater than " + upperValue_c.ToString() + ". Results are undetermined.");
+                //EnableButtons();
                 //return;
             }
 
@@ -148,14 +151,16 @@ namespace LHON_Form
                 setts.rate_extra < lowerValue_c)
             {
                 Append_stat_ln("Error: Diffusion param less  than " + lowerValue_c.ToString() + ". Results are undetermined.");
+                //EnableButtons();
                 //return;
             }
 
-            
+
             if (setts.detox_intra > 1F ||
                 setts.detox_extra> 1F)
             {
                 Append_stat_ln("Error: Detox param greater than 1. Results are undetermined.");
+                //EnableButtons();
                 //return;
             }
 
@@ -195,6 +200,7 @@ namespace LHON_Form
             if (2147483647 / 4 / max_pixels_in_nerve < pixelNeighbourNumbers)
             {
                 Append_stat_ln("Fatal Error: Model too large. Aborting preprocess... ");
+                EnableButtons();
                 return;
             }
 
@@ -219,6 +225,7 @@ namespace LHON_Form
                 k_rate_extra_z > limitDiff)
             {
                 Append_stat_ln("Error: Diffusion param greater than " + limitDiff + " Results are undetermined.");
+                //EnableButtons();
                 //return;
             }
 
@@ -258,6 +265,8 @@ namespace LHON_Form
             rate_values[diff_extra_z_index] = k_rate_extra_z;
             rate_values[diff_one_index] = 1;
 
+
+            Append_stat_ln("A2E " + k_rate_boundary_a2e + " E2A " + k_rate_boundary_e2a);
 
             detox = new float[imsquare];
             tox = new float[imsquare];
@@ -375,16 +384,16 @@ namespace LHON_Form
 
                 //float rc_1 = radiusCircle + process_clearance;
                 float rc_1 = radiusCircle + 1;
-                box_y_min[i] = Max((int)(yCenter - rc_1), 0);
-                box_y_max[i] = Min((int)(yCenter + rc_1), im_size - 1);
-                box_x_min[i] = Max((int)(xCenter - rc_1), 0);
-                box_x_max[i] = Min((int)(xCenter + rc_1), im_size - 1);
+                box_y_min[i] = Max((int)Math.Floor(yCenter - rc_1), 0);
+                box_y_max[i] = Min((int)Math.Ceiling(yCenter + rc_1), im_size - 1);
+                box_x_min[i] = Max((int)Math.Floor(xCenter - rc_1), 0);
+                box_x_max[i] = Min((int)Math.Ceiling(xCenter + rc_1), im_size - 1);
                 box_siz_x[i] = box_y_max[i] - box_y_min[i] + 2;
                 box_siz_y[i] = box_x_max[i] - box_x_min[i] + 2;
 
                 if(box_y_min[i] == box_y_max[i] || box_x_min[i] == box_x_max[i])
                 {
-                    Append_stat_ln("Warning: " + i + " " + box_x_min[i] + " " + box_y_min[i]);
+                    Append_stat_ln("Warning: Zero sized box " + i + " " + box_x_min[i] + " " + box_y_min[i]);
                 }
 
                 if(setts.varToxProd == false)
@@ -443,34 +452,48 @@ namespace LHON_Form
                     {
                         int x_rel = x - box_x_min[i];
                         int y_rel = y - box_y_min[i];
-
+                        //[DWL] This must be in the same order as used in 
+                        //      the diffusion files!!
                         int[] neighbors_x = new int[] { x_rel + 1, x_rel - 1, x_rel, x_rel };
                         int[] neighbors_y = new int[] { y_rel, y_rel, y_rel + 1, y_rel - 1 };
 
                         bool xy_inside = is_inside_this_axon[x_rel, y_rel];
                         uint lin_idx_base = xy_to_lin_idx(x, y) * (uint) pixelNeighbourNumbers;
 
-                        for (uint k = 0; k < plane_neighbours; k++)
+                        if(xy_inside)
                         {
-                            bool neigh_k_inside = is_inside_this_axon[neighbors_x[k], neighbors_y[k]];
-
-                            uint lin_idx = lin_idx_base + k;
-                            
-                            if (xy_inside != neigh_k_inside)
+                            for (uint k = 0; k < plane_neighbours; k++)
                             {
-                                if(xy_inside)
-                                    rate[lin_idx]  = diff_bound_index_a2e;
+                                bool neigh_k_inside = is_inside_this_axon[neighbors_x[k], neighbors_y[k]];
+
+                                uint lin_idx = lin_idx_base + k;
+
+                                if (!neigh_k_inside)
+                                {
+                                   rate[lin_idx] = diff_bound_index_e2a;
+                                }
                                 else
-                                    rate[lin_idx] = diff_bound_index_e2a;
-                               
+                                {
+                                    rate[lin_idx] = diff_live_index;
+                                }
                                 axons_surr_rate[axons_surr_rate_idx[i + 1]++] = lin_idx;
                             }
-                            else if (xy_inside)
+                        }else
+                        {
+                            for (uint k = 0; k < plane_neighbours; k++)
                             {
-                                rate[lin_idx] = diff_live_index;
-                                axons_surr_rate[axons_surr_rate_idx[i + 1]++] = lin_idx;
+                                bool neigh_k_inside = is_inside_this_axon[neighbors_x[k], neighbors_y[k]];
+
+                                uint lin_idx = lin_idx_base + k;
+
+                                if (neigh_k_inside)
+                                {
+                                    rate[lin_idx] = diff_bound_index_a2e;
+                                    axons_surr_rate[axons_surr_rate_idx[i + 1]++] = lin_idx;
+                                }
                             }
                         }
+                        
                         if (xy_inside  && setts.no3dLayers > 0)
                         {
                             rate[lin_idx_base + rateDownLayerIndex] = diff_live_z_index;
@@ -516,7 +539,8 @@ namespace LHON_Form
             Update_bottom_stat("Preprocess Done! (" + (Toc() / 1000).ToString("0.0") + " secs)");
             // Debug.WriteLine("inside: {0} vs allocated {1}", axons_inside_pix_idx[mdl.n_axons - 1], axons_inside_pix.Length);
 
-            btn_start.Enabled = true;
+           
+            EnableButtons();
 
             prep_prof.report();
         }

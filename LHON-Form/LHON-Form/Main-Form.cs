@@ -319,7 +319,7 @@ namespace LHON_Form
                 //areal_progress_chron_val = new float[progress_num_frames];
                 //chron_progress_areal_val = new float[progress_num_frames];
 
-                num_alive_axons[0] = mdl.n_axons - 1;
+                num_alive_axons[0] = mdl.n_axons;
 
                 Load_gpu_from_cpu();
 

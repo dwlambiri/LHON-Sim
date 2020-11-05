@@ -113,7 +113,11 @@ namespace LHON_Form
             };
 
             btn_redraw.Click += (s, e) => { // [DWL] Generate Model Button
-                if (sim_stat != Sim_stat_enum.Running && !new_model_worker.IsBusy) new_model_worker.RunWorkerAsync(); 
+                if (sim_stat != Sim_stat_enum.Running && !new_model_worker.IsBusy)
+                {
+                    Stop_sim(Sim_stat_enum.Stopped);
+                    new_model_worker.RunWorkerAsync();
+                }
             };
 
             btn_preprocess.Click += (s, e) =>
@@ -253,32 +257,7 @@ namespace LHON_Form
             }
             if (sim_stat == Sim_stat_enum.None || sim_stat == Sim_stat_enum.Stopped || sim_stat == Sim_stat_enum.Successful || sim_stat == Sim_stat_enum.Failed)
             {
-                txt_3d_layers.Enabled = false;
-                txt_3d_tox_start.Enabled = false;
-                txt_3d_tox_stop.Enabled = false;
-                btn_preprocess.Enabled = false;
-                btn_reset.Enabled = false;
-                btn_load_setts.Enabled = false;
-                btn_load_model.Enabled = false;
-                btn_redraw.Enabled = false;
-                txt_resolution.Enabled = false;
-                txt_nerve_scale.Enabled = false;
-                txt_death_tox_threshold.Enabled = false;
-                txt_detox_extra.Enabled = false;
-                txt_detox_intra.Enabled = false;
-                txt_on_death_tox.Enabled = false;
-                txt_rate_bound_a2e.Enabled = false;
-                txt_rate_bound_e2a.Enabled = false;
-                txt_rate_dead.Enabled = false;
-                txt_rate_extra.Enabled = false;
-                txt_rate_extra_z.Enabled = false;
-                txt_rate_live.Enabled = false;
-                txt_rate_live_z.Enabled = false;
-                txt_tox_prod_rate.Enabled = false;
-                txt_var_death.Enabled = false;
-                chk_var_death.Enabled = false;
-                chk_strict_rad.Enabled = false;
-                txt_clearance.Enabled = false;
+                DisableButtons();
 
                 sim_stat = Sim_stat_enum.Running;
                 alg_worker.RunWorkerAsync();
@@ -286,32 +265,7 @@ namespace LHON_Form
                 Update_bottom_stat("Simulation is Running");
             } else if(sim_stat == Sim_stat_enum.Paused)
             {
-                txt_3d_layers.Enabled = false;
-                txt_3d_tox_start.Enabled = false;
-                txt_3d_tox_stop.Enabled = false;
-                btn_preprocess.Enabled = false;
-                btn_reset.Enabled = false;
-                btn_load_setts.Enabled = false;
-                btn_load_model.Enabled = false;
-                btn_redraw.Enabled = false;
-                txt_resolution.Enabled = false;
-                txt_nerve_scale.Enabled = false;
-                txt_death_tox_threshold.Enabled = false;
-                txt_detox_extra.Enabled = false;
-                txt_detox_intra.Enabled = false;
-                txt_on_death_tox.Enabled = false;
-                txt_rate_bound_a2e.Enabled = false;
-                txt_rate_bound_e2a.Enabled = false;
-                txt_rate_dead.Enabled = false;
-                txt_rate_extra.Enabled = false;
-                txt_rate_extra_z.Enabled = false;
-                txt_rate_live.Enabled = false;
-                txt_rate_live_z.Enabled = false;
-                txt_tox_prod_rate.Enabled = false;
-                txt_var_death.Enabled = false;
-                chk_var_death.Enabled = false;
-                chk_strict_rad.Enabled = false;
-                txt_clearance.Enabled = false;
+                DisableButtons();
 
                 sim_stat = Sim_stat_enum.Running;
                 Set_btn_start_txt("&Pause",  System.Drawing.Color.DarkRed);
@@ -345,32 +299,7 @@ namespace LHON_Form
                     Set_btn_start_txt("&Start", System.Drawing.Color.Green);
                     Update_bottom_stat("Simulation is " + sim_stat.ToString());
                 }
-                txt_3d_layers.Enabled = true;
-                txt_3d_tox_start.Enabled = true;
-                txt_3d_tox_stop.Enabled = true;
-                btn_preprocess.Enabled = true;
-                btn_reset.Enabled = true;
-                btn_load_setts.Enabled = true;
-                btn_load_model.Enabled = true;
-                btn_redraw.Enabled = true;
-                txt_resolution.Enabled = true;
-                txt_nerve_scale.Enabled = true;
-                txt_death_tox_threshold.Enabled = true;
-                txt_detox_extra.Enabled = true;
-                txt_detox_intra.Enabled = true;
-                txt_on_death_tox.Enabled = true;
-                txt_rate_bound_a2e.Enabled = true;
-                txt_rate_bound_e2a.Enabled = true;
-                txt_rate_dead.Enabled = true;
-                txt_rate_extra.Enabled = true;
-                if(setts.no3dLayers>0) txt_rate_extra_z.Enabled = true;
-                txt_rate_live.Enabled = true;
-                if(setts.no3dLayers >0) txt_rate_live_z.Enabled = true;
-                txt_tox_prod_rate.Enabled = true;
-                txt_var_death.Enabled = true;
-                chk_var_death.Enabled = true;
-                chk_strict_rad.Enabled = true;
-                txt_clearance.Enabled = true;
+                EnableButtons();
             }
         }
         // ====================================================================
@@ -553,33 +482,89 @@ namespace LHON_Form
                 setts.gui_iteration_period = tmp;
             };
 
-            txt_detox_extra.TextChanged += (s, e) => setts.detox_extra = Read_float(s);
-            txt_detox_intra.TextChanged += (s, e) => setts.detox_intra = Read_float(s);
+            txt_detox_extra.TextChanged += (s, e) =>
+            {
+                setts.detox_extra = Read_float(s);
+                SimParamsChanged();
+            };
+            txt_detox_intra.TextChanged += (s, e) =>
+            {
+                setts.detox_intra = Read_float(s);
+                SimParamsChanged();
+            };
 
-            txt_rate_bound_a2e.TextChanged += (s, e) => setts.rate_bound_a2e = Read_float(s);
-            txt_rate_bound_e2a.TextChanged += (s, e) => setts.rate_bound_e2a = Read_float(s);
-            txt_rate_dead.TextChanged += (s, e) => setts.rate_dead = Read_float(s);
-            txt_rate_extra.TextChanged += (s, e) => setts.rate_extra = Read_float(s);
-            txt_rate_extra_z.TextChanged += (s, e) => setts.rate_extra_z = Read_float(s);
-            txt_rate_live.TextChanged += (s, e) => setts.rate_live = Read_float(s);
-            txt_rate_live_z.TextChanged += (s, e) => setts.rate_live_z = Read_float(s);
-            txt_tox_prod_rate.TextChanged += (s, e) => setts.tox_prod = Read_float(s);
-            txt_death_tox_threshold.TextChanged += (s, e) => setts.death_tox_thres = Read_float(s);
-            txt_var_death.TextChanged += (s, e) => setts.death_var_thr = Read_float(s);
-            txt_insult_tox.TextChanged += (s, e) => setts.insult_tox = Read_float(s);
-            txt_on_death_tox.TextChanged += (s, e) => setts.on_death_tox = Read_float(s);
+            txt_rate_bound_a2e.TextChanged += (s, e) =>
+            {
+                setts.rate_bound_a2e = Read_float(s);
+                SimParamsChanged();
+            };
 
-            txt_clearance.TextChanged += (s, e) => mdl_clearance = Read_float(s);
+            txt_rate_bound_e2a.TextChanged += (s, e) =>
+            {
+                setts.rate_bound_e2a = Read_float(s);
+                SimParamsChanged();
+            };
+            txt_rate_dead.TextChanged += (s, e) =>
+            {
+                setts.rate_dead = Read_float(s);
+                SimParamsChanged();
+            };
+            txt_rate_extra.TextChanged += (s, e) =>
+            {
+                setts.rate_extra = Read_float(s);
+                SimParamsChanged();
+            };
+            txt_rate_extra_z.TextChanged += (s, e) =>
+            {
+                setts.rate_extra_z = Read_float(s);
+                SimParamsChanged();
+            };
+            txt_rate_live.TextChanged += (s, e) =>
+            {
+                setts.rate_live = Read_float(s);
+                SimParamsChanged();
+            };
+            txt_rate_live_z.TextChanged += (s, e) =>
+            {
+                setts.rate_live_z = Read_float(s);
+                SimParamsChanged();
+            };
+            txt_tox_prod_rate.TextChanged += (s, e) =>
+            {
+                setts.tox_prod = Read_float(s);
+                SimParamsChanged();
+            };
+            txt_death_tox_threshold.TextChanged += (s, e) =>
+            {
+                setts.death_tox_thres = Read_float(s);
+                SimParamsChanged();
+            };
+            txt_var_death.TextChanged += (s, e) =>
+            {
+                setts.death_var_thr = Read_float(s);
+                SimParamsChanged();
+            };
+            txt_insult_tox.TextChanged += (s, e) =>
+            {
+                setts.insult_tox = Read_float(s);
+                SimParamsChanged();
+            };
+            txt_on_death_tox.TextChanged += (s, e) =>
+            {
+                setts.on_death_tox = Read_float(s);
+                SimParamsChanged();
+            };
 
+            txt_clearance.TextChanged += (s, e) =>
+            {
+                mdl_clearance = Read_float(s);
+            };
             txt_3d_layers.TextChanged += (s, e) =>
             {
-                if (sim_stat != Sim_stat_enum.Running && sim_stat != Sim_stat_enum.Paused)
+                if (sim_stat != Sim_stat_enum.Running)
                 {
+                    Stop_sim(Sim_stat_enum.Stopped);
                     setts.no3dLayers = Read_int(s);
-                    sox_track_bar_xy.Maximum = setts.no3dLayers;
-                    setts.layerToDisplay = 0;
-                    sox_track_bar_xy.Value = setts.layerToDisplay;
-                    txt_layer_to_display.Text = sox_track_bar_xy.Value.ToString();
                     if (setts.no3dLayers == 0)
                     {
                         xy_direction_button.Checked = true;
@@ -613,19 +598,19 @@ namespace LHON_Form
 
             txt_3d_tox_start.TextChanged += (s, e) =>
             {
-                if (sim_stat != Sim_stat_enum.Running && sim_stat != Sim_stat_enum.Paused)
+                if (sim_stat != Sim_stat_enum.Running)
                 {
                     setts.toxLayerStart = Read_int(s);
-                    Append_stat_ln("Info: Position of start SOX layer changed. Using previous preprocessing.");
+                    SimParamsChanged();
                 }
             };
 
             txt_3d_tox_stop.TextChanged += (s, e) =>
             {
-                if (sim_stat != Sim_stat_enum.Running && sim_stat != Sim_stat_enum.Paused)
+                if (sim_stat != Sim_stat_enum.Running)
                 {
                     setts.toxLayerStop = Read_int(s);
-                    Append_stat_ln("Info: Position of stop SOX layer changed. Using previous preprocessing.");
+                    SimParamsChanged();
                 }
             };
 
@@ -861,6 +846,104 @@ namespace LHON_Form
                 if (FD.ShowDialog() != DialogResult.OK) return;
                 Load_settings(FD.FileName);
             };
+        }
+
+
+        private void ResetPlaneViewer()
+        {
+            if (InvokeRequired)
+                Invoke(new Action(() => ResetPlaneViewer()));
+            else
+            {
+                sox_track_bar_xy.Maximum = setts.no3dLayers;
+                setts.layerToDisplay = 0;
+                sox_track_bar_xy.Value = setts.layerToDisplay;
+                txt_layer_to_display.Text = sox_track_bar_xy.Value.ToString();
+            }
+        }
+
+
+        private void DisableButtons()
+        {
+            if (InvokeRequired)
+                Invoke(new Action(() => DisableButtons()));
+            else
+            {
+                txt_3d_layers.Enabled = false;
+                txt_3d_tox_start.Enabled = false;
+                txt_3d_tox_stop.Enabled = false;
+                btn_preprocess.Enabled = false;
+                btn_reset.Enabled = false;
+                btn_load_setts.Enabled = false;
+                btn_load_model.Enabled = false;
+                btn_redraw.Enabled = false;
+                txt_resolution.Enabled = false;
+                txt_nerve_scale.Enabled = false;
+                txt_death_tox_threshold.Enabled = false;
+                txt_detox_extra.Enabled = false;
+                txt_detox_intra.Enabled = false;
+                txt_on_death_tox.Enabled = false;
+                txt_rate_bound_a2e.Enabled = false;
+                txt_rate_bound_e2a.Enabled = false;
+                txt_rate_dead.Enabled = false;
+                txt_rate_extra.Enabled = false;
+                txt_rate_extra_z.Enabled = false;
+                txt_rate_live.Enabled = false;
+                txt_rate_live_z.Enabled = false;
+                txt_tox_prod_rate.Enabled = false;
+                txt_var_death.Enabled = false;
+                chk_var_death.Enabled = false;
+                chk_strict_rad.Enabled = false;
+                txt_clearance.Enabled = false;
+
+            }
+        }
+
+        private void EnableButtons()
+        {
+            if (InvokeRequired)
+                Invoke(new Action(() => EnableButtons()));
+            else
+            {
+                txt_3d_layers.Enabled = true;
+                txt_3d_tox_start.Enabled = true;
+                txt_3d_tox_stop.Enabled = true;
+                btn_preprocess.Enabled = true;
+                btn_reset.Enabled = true;
+                btn_load_setts.Enabled = true;
+                btn_load_model.Enabled = true;
+                btn_redraw.Enabled = true;
+                txt_resolution.Enabled = true;
+                txt_nerve_scale.Enabled = true;
+                txt_death_tox_threshold.Enabled = true;
+                txt_detox_extra.Enabled = true;
+                txt_detox_intra.Enabled = true;
+                txt_on_death_tox.Enabled = true;
+                txt_rate_bound_a2e.Enabled = true;
+                txt_rate_bound_e2a.Enabled = true;
+                txt_rate_dead.Enabled = true;
+                txt_rate_extra.Enabled = true;
+                if (setts.no3dLayers > 0) txt_rate_extra_z.Enabled = true;
+                txt_rate_live.Enabled = true;
+                if (setts.no3dLayers > 0) txt_rate_live_z.Enabled = true;
+                txt_tox_prod_rate.Enabled = true;
+                txt_var_death.Enabled = true;
+                chk_var_death.Enabled = true;
+                chk_strict_rad.Enabled = true;
+                txt_clearance.Enabled = true;
+            }
+        }
+
+        private void SimParamsChanged()
+        {
+            if (InvokeRequired)
+                Invoke(new Action(() => SimParamsChanged()));
+            else
+            {
+                Stop_sim(Sim_stat_enum.Stopped);
+                Set_btn_start_txt("&Start", System.Drawing.Color.Gray); btn_start.Enabled = false;
+                Append_stat_ln("Info: Simulation parameter changed. Call preprocess next.....");
+            }
         }
 
         private void Load_model(string path)
