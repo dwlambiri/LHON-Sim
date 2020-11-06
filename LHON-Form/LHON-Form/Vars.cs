@@ -88,6 +88,8 @@ namespace LHON_Form
 
             public int gui_iteration_period;
 
+            public bool useRandProdFactor;
+
         }
 
         private Model mdl = new Model();

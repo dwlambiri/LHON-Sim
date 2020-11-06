@@ -73,8 +73,12 @@ namespace LHON_Form
             //tox_new_dev = gpuLocal.Allocate<float>(im_size * im_size); gpuLocal.Set(tox_new_dev);
 
             rate_dev = gpuLocal.Allocate(rate); gpuLocal.CopyToDevice(rate, rate_dev);
-            //[DWL] added this
 
+            //[DWL] added rand numbers for production (plane related)
+            if (setts.no3dLayers > 0) { 
+                randProd_dev = gpuLocal.Allocate(randProd); gpuLocal.CopyToDevice(randProd, randProd_dev);
+            }
+            //[DWL] added this
             rate_values_dev = gpu.Allocate(rate_values); gpu.CopyToDevice(rate_values, rate_values_dev);
             detox_dev = gpuLocal.Allocate(detox); gpuLocal.CopyToDevice(detox, detox_dev);
             tox_prod_dev = gpuLocal.Allocate(tox_prod); gpuLocal.CopyToDevice(tox_prod, tox_prod_dev);

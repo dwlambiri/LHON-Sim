@@ -5,6 +5,7 @@ using System.Linq;
 using Cudafy;
 using Cudafy.Host;
 using MathNet.Numerics.LinearAlgebra.Solvers;
+using Mono.CSharp;
 
 namespace LHON_Form
 {
@@ -46,6 +47,7 @@ namespace LHON_Form
         // ====================================
 
         private float[] tox, tox_dev; // Tox
+        private float[] randProd, randProd_dev; // random number to multiply the production in plane by
         private byte[] rate, rate_dev; // Rate
         private float[] rate_values, rate_values_dev; // vector of diffusion rate values. rate_value[0]=0; rate[5]=1;
         private float[] detox, detox_dev; // Detox
@@ -98,6 +100,7 @@ namespace LHON_Form
 
         private int headLayer = 2;
 
+       
         // ====================================
         //        Model Preprocessing
         // ====================================
@@ -111,6 +114,7 @@ namespace LHON_Form
         {
 
 
+            Random rnd = new Random();
 
             headLayer = 2;
             // =======================================
@@ -193,6 +197,17 @@ namespace LHON_Form
             {
                 setts.no3dLayers = maxNumPlanes-4;
                 Append_stat_ln("Warning: Too many planes! Can only allocate " + setts.no3dLayers);
+            }
+
+            randProd = new float[setts.no3dLayers+1];
+
+            for(int i = 0; i < setts.no3dLayers+1; i++)
+            {
+                //randProd[i] = (float) 1/(1+rnd.Next(0,4));
+                if(setts.useRandProdFactor)
+                    randProd[i] = (float) rnd.NextDouble();
+                else
+                    randProd[i] = 1;
             }
 
             int max_pixels_in_nerve = (int)(Pow2(mdl_nerve_r * res) * (1 - Pow2(mdl_vessel_ratio)) * Math.PI);

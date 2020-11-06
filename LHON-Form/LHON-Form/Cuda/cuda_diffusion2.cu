@@ -3,8 +3,8 @@
 #define rateDownLayerIndex  5
 
 extern "C" __global__  void cuda_diffusion2(int* pix_idx, int pix_idx_num, unsigned short im_size,
-	float* tox, float* detox, float* tox_prod, unsigned char* rate, float* rate_values, int rate_dimensions, 
-	int dstl, int tl, int ml, int bl, int top, int bottom, int injury)
+	float* tox, float* detox, float* tox_prod, float* randTable, unsigned char* rate, float* rate_values, int rate_dimensions, 
+	int dstl, int tl, int ml, int bl, int top, int bottom, int injury, int index)
 {
 	int idx = (blockIdx.x * gridDim.y + blockIdx.y) * blockDim.x + threadIdx.x;
 	if (idx < pix_idx_num)
@@ -40,7 +40,7 @@ extern "C" __global__  void cuda_diffusion2(int* pix_idx, int pix_idx_num, unsig
 			tox_new[xy] += (tox_down[xy] - t) * rate_values[rate[xyN + rateDownLayerIndex]];
 
 		if(injury)
-			tox_new[xy] += tox_prod[xy];
+			tox_new[xy] += tox_prod[xy] * randTable[index];
 
 		tox_new[xy] *= detox[xy];
 	}

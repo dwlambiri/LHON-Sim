@@ -145,8 +145,8 @@ namespace LHON_Form
                     bool injury = setts.toxLayerStart == 0;
 
                     gpu.Launch(blocks_per_grid_2D_pix, threads_per_block_1D).cuda_diffusion2(pix_idx_dev, pix_idx_num, im_size,
-                                            tox_dev, detox_dev, tox_prod_dev, rate_dev, rate_values_dev, pixelNeighbourNumbers,
-                                            dstl, tl, ml, bl, 1, 0, injury ? 1 : 0);
+                                            tox_dev, detox_dev, tox_prod_dev, randProd_dev, rate_dev, rate_values_dev, pixelNeighbourNumbers,
+                                            dstl, tl, ml, bl, 1, 0, injury ? 1 : 0, 0);
 
                     for (int j = 1; j < setts.no3dLayers-1; j++)
                     {
@@ -156,8 +156,8 @@ namespace LHON_Form
                         bl   = Mod(headLayer + j + 1, totalPlanes);
                         injury = (j >= setts.toxLayerStart) && (j <= setts.toxLayerStop);
                         gpu.Launch(blocks_per_grid_2D_pix, threads_per_block_1D).cuda_diffusion2(pix_idx_dev, pix_idx_num, im_size,
-                                            tox_dev, detox_dev, tox_prod_dev, rate_dev, rate_values_dev, pixelNeighbourNumbers,
-                                            dstl, tl, ml, bl, 0, 0, injury ? 1 : 0);
+                                            tox_dev, detox_dev, tox_prod_dev, randProd_dev, rate_dev, rate_values_dev, pixelNeighbourNumbers,
+                                            dstl, tl, ml, bl, 0, 0, injury ? 1 : 0, j);
                     }
 
                     dstl = Mod(headLayer - 2 + setts.no3dLayers - 1, totalPlanes);
@@ -166,8 +166,8 @@ namespace LHON_Form
                     bl   = Mod(headLayer   + setts.no3dLayers - 1, totalPlanes);
                     injury = (setts.no3dLayers - 1 <= setts.toxLayerStop);
                     gpu.Launch(blocks_per_grid_2D_pix, threads_per_block_1D).cuda_diffusion2(pix_idx_dev, pix_idx_num, im_size,
-                                            tox_dev, detox_dev, tox_prod_dev, rate_dev, rate_values_dev, pixelNeighbourNumbers,
-                                            dstl, tl, ml, bl, 0, 1, injury ? 1 : 0);
+                                            tox_dev, detox_dev, tox_prod_dev, randProd_dev, rate_dev, rate_values_dev, pixelNeighbourNumbers,
+                                            dstl, tl, ml, bl, 0, 1, injury ? 1 : 0, setts.no3dLayers - 1);
 
                     headLayer = Mod(headLayer - 2, totalPlanes);
                     if (setts.no3dLayers < 0)

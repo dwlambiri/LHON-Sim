@@ -448,6 +448,18 @@ namespace LHON_Form
 
         private void Init_settings_gui()
         {
+
+            chk_rand_mult.CheckedChanged += (s, e) =>
+            {
+
+                if (sim_stat != Sim_stat_enum.Running)
+                {
+                    setts.useRandProdFactor = chk_rand_mult.Checked;
+                    SimParamsChanged();
+                }
+
+            };
+
             // Model parameters
             txt_nerve_scale.TextChanged += (s, e) =>
             {
@@ -911,6 +923,7 @@ namespace LHON_Form
                 chk_var_death.Enabled = false;
                 chk_strict_rad.Enabled = false;
                 txt_clearance.Enabled = false;
+                chk_rand_mult.Enabled = false;
 
             }
         }
@@ -947,6 +960,7 @@ namespace LHON_Form
                 chk_var_death.Enabled = true;
                 chk_strict_rad.Enabled = true;
                 txt_clearance.Enabled = true;
+                chk_rand_mult.Enabled = true;
             }
         }
 
@@ -1013,6 +1027,8 @@ namespace LHON_Form
             txt_rec_interval.Text = setts.gui_iteration_period.ToString();
 
             chk_var_thr.Checked = setts.varToxProd;
+
+            chk_rand_mult.Checked = setts.useRandProdFactor;
 
             Update_num_axons_lbl();
         }
