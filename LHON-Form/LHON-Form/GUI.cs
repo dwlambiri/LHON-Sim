@@ -207,7 +207,17 @@ namespace LHON_Form
                     }
                 }
             };
-            picB.Click += (s, e) => mouse_click(e as MouseEventArgs);
+
+            picB.Click += (s, e) => {
+
+                int[] um = get_mouse_location(e as MouseEventArgs);
+
+               tox_image_value.Show( (1000*bmp_tox[um[0]+um[1]* bmp_im_size]).ToString() + "*10^-3", picB, um[2], um[3], 10000);
+
+
+            };
+
+            //picB.Click += (s, e) => mouse_click(e as MouseEventArgs);
         }
 
         private void Update_show_opts()

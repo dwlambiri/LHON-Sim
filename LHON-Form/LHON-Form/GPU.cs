@@ -94,6 +94,10 @@ namespace LHON_Form
             num_alive_axons_dev = gpuLocal.Allocate<int>(1); gpuLocal.CopyToDevice(num_alive_axons, num_alive_axons_dev);
             death_itr_dev = gpuLocal.Allocate(death_itr); gpuLocal.CopyToDevice(death_itr, death_itr_dev);
             bmp_bytes_dev = gpuLocal.Allocate(bmp_bytes); gpuLocal.CopyToDevice(bmp_bytes, bmp_bytes_dev);
+
+            //[DWL] Added array to retrieve the pixel tox values
+            // Useful for debugging
+            bmp_tox_dev = gpuLocal.Allocate(bmp_tox); gpuLocal.CopyToDevice(bmp_tox, bmp_tox_dev);
             init_insult_mask_dev = gpuLocal.Allocate<byte>(bmp_im_size, bmp_im_size);
 
             sum_tox_dev = gpuLocal.Allocate<float>(1);

@@ -18,6 +18,7 @@ namespace LHON_Form
         private Bitmap bmp;
         private IntPtr bmp_scan0;
         private byte[,,] bmp_bytes, bmp_bytes_dev;
+        private float[] bmp_tox, bmp_tox_dev;
         private byte[,] init_insult_mask_dev;
         private float bmp_image_compression_ratio;
         private bool[] show_opts = new bool[3];
@@ -40,6 +41,7 @@ namespace LHON_Form
             bmp_scan0 = bmpData.Scan0;
             bmp.UnlockBits(bmpData);
             bmp_bytes = new byte[bmp_im_size, bmp_im_size, 4];
+            bmp_tox = new float[bmp_im_size * bmp_im_size];
 
             for (int y = 0; y < bmp_im_size; y++)
                 for (int x = 0; x < bmp_im_size; x++)
@@ -58,9 +60,10 @@ namespace LHON_Form
                 //[DWL] this way the chain reaction becomes clearly visible.
 
                 gpu.Launch(update_bmp_gride_size_2D, update_bmp_block_size_2D).cuda_update_image(im_size, bmp_im_size, bmp_image_compression_ratio,
-                    bmp_bytes_dev, tox_dev, axon_mask_dev, init_insult_mask_dev, death_tox_thres*(1+(chk_var_thr.Checked?death_var_thr:0)), show_opts_dev, setts.no3dLayers > 0 ? showdir: 0, setts.no3dLayers > 0 ? layerToDisplay: 0, imsq, setts.no3dLayers> 0 ? headLayer: 0, setts.no3dLayers);
+                    bmp_bytes_dev, bmp_tox_dev, tox_dev, axon_mask_dev, init_insult_mask_dev, death_tox_thres*(1+(chk_var_thr.Checked?death_var_thr:0)), show_opts_dev, setts.no3dLayers > 0 ? showdir: 0, setts.no3dLayers > 0 ? layerToDisplay: 0, imsq, setts.no3dLayers> 0 ? headLayer: 0, setts.no3dLayers);
 
                 gpu.CopyFromDevice(bmp_bytes_dev, bmp_bytes);
+                gpu.CopyFromDevice(bmp_tox_dev, bmp_tox);
 
                 fixed (byte* dat = &bmp_bytes[0, 0, 0])
                     CopyMemory(bmp_scan0, (IntPtr)dat, (uint)bmp_bytes.Length);
@@ -105,19 +108,16 @@ namespace LHON_Form
             float picW = picB.Size.Width;
             float picH = picB.Size.Height;
 
-            float asp_im = (float)im_size / (float)im_size;
-            float asp_box = picW / picH;
-
-            if (asp_im > asp_box)
+            if (picH > picW)
             {
                 picB_ratio = picW / im_size;
                 picB_offx = 0;
-                picB_offy = (int)((picH - picB_ratio * (float)im_size) / 2f);
+                picB_offy = (int)((picH - picW) / 2f);
             }
             else
             {
                 picB_ratio = picH / im_size;
-                picB_offx = (int)((picW - picB_ratio * (float)im_size) / 2f);
+                picB_offx = (int)((picW - picH) / 2f);
                 picB_offy = 0;
             }
         }
@@ -133,6 +133,18 @@ namespace LHON_Form
                 um[1] = (float)(im_size - y - 1) / setts.resolution - mdl_nerve_r;
                 um[0] = (float)(x - 1) / setts.resolution - mdl_nerve_r;
             }
+            return um;
+        }
+
+        private int[] get_mouse_location(MouseEventArgs e)
+        {
+            int[] um = new int[4];
+            int x = (int)Math.Round((double)((e.X - picB_offx) / picB_ratio / bmp_image_compression_ratio)) ;
+            int y = (int)Math.Round((double)((e.Y - picB_offy) / picB_ratio / bmp_image_compression_ratio));
+            um[0] = x >= bmp_im_size ? bmp_im_size-1 : x;
+            um[1] = y >= bmp_im_size ? bmp_im_size-1 : y;
+            um[2] = e.X;
+            um[3] = e.Y - 40;           
             return um;
         }
 
