@@ -16,7 +16,6 @@ namespace LHON_Form
         //      Constants
         // ========================
 
-        private readonly float min_res_c = 10F;
         private int process_clearance = 2;
 
         // ========================
@@ -127,6 +126,8 @@ namespace LHON_Form
 
             float res = setts.resolution;
             mdl_nerve_r = mdl.nerve_scale_ratio * mdl_real_nerve_r;
+
+            float min_res_c = (float)setts.standardPixelRes;
 
             float rate_conv_2d = Pow2(res / min_res_c);
             float rate_conv_lin = res / min_res_c;

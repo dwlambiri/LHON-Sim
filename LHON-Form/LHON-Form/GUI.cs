@@ -588,6 +588,12 @@ namespace LHON_Form
                 SimParamsChanged();
             };
 
+            txt_default_res.TextChanged += (s, e) =>
+            {
+                setts.standardPixelRes = Read_int(s);
+                SimParamsChanged();
+            };
+
             txt_clearance.TextChanged += (s, e) =>
             {
                 mdl_clearance = Read_float(s);
@@ -934,6 +940,7 @@ namespace LHON_Form
                 chk_strict_rad.Enabled = false;
                 txt_clearance.Enabled = false;
                 chk_rand_mult.Enabled = false;
+                txt_default_res.Enabled = false;
 
             }
         }
@@ -971,6 +978,7 @@ namespace LHON_Form
                 chk_strict_rad.Enabled = true;
                 txt_clearance.Enabled = true;
                 chk_rand_mult.Enabled = true;
+                txt_default_res.Enabled = true;
             }
         }
 
@@ -1039,6 +1047,13 @@ namespace LHON_Form
             chk_var_thr.Checked = setts.varToxProd;
 
             chk_rand_mult.Checked = setts.useRandProdFactor;
+
+            if(setts.standardPixelRes < 10)
+            {
+                setts.standardPixelRes = 10;
+            }
+
+            txt_default_res.Text = setts.standardPixelRes.ToString();
 
             Update_num_axons_lbl();
         }

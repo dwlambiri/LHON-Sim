@@ -90,6 +90,8 @@ namespace LHON_Form
 
             public bool useRandProdFactor;
 
+            public int standardPixelRes;
+
         }
 
         private Model mdl = new Model();
