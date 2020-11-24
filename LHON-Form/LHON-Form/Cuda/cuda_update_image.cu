@@ -1,6 +1,6 @@
 ﻿
-extern "C" __global__  void cuda_update_image(unsigned short im_size, unsigned short bmp_im_size, float bmp_image_compression_ratio,
-	unsigned char* bmp, float* bmp_tox, float* tox, unsigned char* axon_mask, unsigned char* init_insult_mask, float tox_max, bool* show_opts, int showdir, int lineToDisplay, int imsq, int head, int no3d)
+extern "C" __global__  void cuda_update_image(unsigned short im_size, unsigned short bmp_im_size, float bmp_image_compression_ratio, float bmp_z_compression_ratio,
+	unsigned char* bmp, float* bmp_tox, float* tox, unsigned char* axon_mask, unsigned char* init_insult_mask, float tox_max, bool* show_opts, int showdir, int lineToDisplay, int imsq, int head, int no3d, int showRGBSox, int displayAtTop)
 {
 	int x_bmp = blockIdx.x * blockDim.x + threadIdx.x;
 	int y_bmp = blockIdx.y * blockDim.y + threadIdx.y;
@@ -18,34 +18,110 @@ extern "C" __global__  void cuda_update_image(unsigned short im_size, unsigned s
 		case 1: { 
 			// XZ (vertical slider)
 			//green = blue = 0;
-			if ( (x_bmp >= lineToDisplay) && (x_bmp < lineToDisplay + no3d)  && show_opts[2]) {
-				int layer = (head + x_bmp - lineToDisplay) % (no3d + 2);
-				int xpos = (int)((float)(bmp_im_size - lineToDisplay) * bmp_image_compression_ratio);
-				int ypos = (int)((float)y_bmp * bmp_image_compression_ratio);
-				int xy = ypos * im_size + xpos;
-				//int xy = xpos * im_size + ypos;
-				tox_pix_value = tox[xy + imsq * layer];
-				float tmp = tox_pix_value / tox_max;
-				if (tmp > 1) tmp = 1;
-				red = (unsigned char)(tmp * 255); // 0 - 255
-				//red = 255;
+
+			if (displayAtTop) {
+				if (show_opts[2]) {
+					float xf = x_bmp * bmp_z_compression_ratio;
+					int layer = (head+(int)(xf)) % (no3d + 2);
+					int xpos = (int)((float)(bmp_im_size - lineToDisplay) * bmp_image_compression_ratio);
+					int ypos = (int)((float)y_bmp * bmp_image_compression_ratio);
+					int xy = ypos * im_size + xpos;
+					//int xy = xpos * im_size + ypos;
+					tox_pix_value = tox[xy + imsq * layer];
+					float tmp = tox_pix_value / tox_max;
+					if (tmp > 1) tmp = 1;
+					red = (unsigned char)(tmp * 255); // 0 - 255
+					if (showRGBSox) {
+						float gt = tmp * 255 - red;
+						if (gt > 0) {
+							green = (unsigned char)(gt * 255);
+							gt = gt * 255 - green;
+							if (gt > 0) {
+								blue = (unsigned char)(gt * 255);
+							}
+						}
+					}
+				}
+			}
+			else {
+				if ((x_bmp >= lineToDisplay) && (x_bmp < lineToDisplay + no3d) && show_opts[2]) {
+					int layer = (head + x_bmp - lineToDisplay) % (no3d + 2);
+					int xpos = (int)((float)(bmp_im_size - lineToDisplay) * bmp_image_compression_ratio);
+					int ypos = (int)((float)y_bmp * bmp_image_compression_ratio);
+					int xy = ypos * im_size + xpos;
+					//int xy = xpos * im_size + ypos;
+					tox_pix_value = tox[xy + imsq * layer];
+					float tmp = tox_pix_value / tox_max;
+					if (tmp > 1) tmp = 1;
+					red = (unsigned char)(tmp * 255); // 0 - 255
+					if (showRGBSox) {
+						float gt = tmp * 255 - red;
+						if (gt > 0) {
+							green = (unsigned char)(gt * 255);
+							gt = gt * 255 - green;
+							if (gt > 0) {
+								blue = (unsigned char)(gt * 255);
+							}
+						}
+					}
+					//red = 255;
+				}
 			}
 			break;
 		}
 		case 2: {
 			// YZ (horizontal slider)
 			//green = blue = 0;
-			if ((y_bmp >= lineToDisplay) && (y_bmp < lineToDisplay + no3d) && show_opts[2]) {
-				int xpos = (int)((float)(bmp_im_size - x_bmp) * bmp_image_compression_ratio);
-				int ypos = (int)((float)lineToDisplay * bmp_image_compression_ratio);
-				int xy = ypos * im_size + xpos;
-				//int xy = xpos * im_size + ypos;
-				int layer = (head + y_bmp - lineToDisplay) % (no3d + 2);
-				tox_pix_value = tox[xy + imsq * layer];
-				float tmp = tox_pix_value / tox_max;
-				if (tmp > 1) tmp = 1;
-				red = (unsigned char)(tmp * 255); // 0 - 255
-				//red = 255;
+			if (displayAtTop) {
+				if (show_opts[2]) {
+					int xpos = (int)((float)(bmp_im_size - x_bmp) * bmp_image_compression_ratio);
+					int ypos = (int)((float)lineToDisplay * bmp_image_compression_ratio);
+					int xy = ypos * im_size + xpos;
+					//int xy = xpos * im_size + ypos;
+					float yf = y_bmp * bmp_z_compression_ratio;
+					int layer = (head + (int)(yf)) % (no3d + 2);
+					tox_pix_value = tox[xy + imsq * layer];
+					float tmp = tox_pix_value / tox_max;
+					if (tmp > 1) tmp = 1;
+					red = (unsigned char)(tmp * 255); // 0 - 255
+					//red = 255;
+					red = (unsigned char)(tmp * 255); // 0 - 255
+					if (showRGBSox) {
+						float gt = tmp * 255 - red;
+						if (gt > 0) {
+							green = (unsigned char)(gt * 255);
+							gt = gt * 255 - green;
+							if (gt > 0) {
+								blue = (unsigned char)(gt * 255);
+							}
+						}
+					}
+				}
+			}
+			else {
+				if ((y_bmp >= lineToDisplay) && (y_bmp < lineToDisplay + no3d) && show_opts[2]) {
+					int xpos = (int)((float)(bmp_im_size - x_bmp) * bmp_image_compression_ratio);
+					int ypos = (int)((float)lineToDisplay * bmp_image_compression_ratio);
+					int xy = ypos * im_size + xpos;
+					//int xy = xpos * im_size + ypos;
+					int layer = (head + y_bmp - lineToDisplay) % (no3d + 2);
+					tox_pix_value = tox[xy + imsq * layer];
+					float tmp = tox_pix_value / tox_max;
+					if (tmp > 1) tmp = 1;
+					red = (unsigned char)(tmp * 255); // 0 - 255
+					//red = 255;
+					red = (unsigned char)(tmp * 255); // 0 - 255
+					if (showRGBSox) {
+						float gt = tmp * 255 - red;
+						if (gt > 0) {
+							green = (unsigned char)(gt * 255);
+							gt = gt * 255 - green;
+							if (gt > 0) {
+								blue = (unsigned char)(gt * 255);
+							}
+						}
+					}
+				}
 			}
 			break;
 		}
@@ -81,7 +157,22 @@ extern "C" __global__  void cuda_update_image(unsigned short im_size, unsigned s
 				}
 
 				if (show_opts[2]) {
-					red = normalized_toxin;
+					if (show_opts[0] == 0 && show_opts[1] == 0) {
+						red = normalized_toxin;
+						if (showRGBSox) {
+							float gt = tmp * 255 - red;
+							if (gt > 0) {
+								green = (unsigned char)(gt * 255);
+								gt = gt * 255 - green;
+								if (gt > 0) {
+									blue = (unsigned char)(gt * 255);
+								}
+							}
+						}
+					}
+					else {
+						red = normalized_toxin;
+					}
 					// green = 255 - normalized_toxin;
 				}
 				//else { red = 0; }

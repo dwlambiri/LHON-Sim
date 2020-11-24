@@ -37,6 +37,10 @@ namespace LHON_Form
         private float stop_at_time = 0;
         private int main_loop_delay = 0;
 
+        //[DWL] if set to 1 display sox using RGB, if 0 use red only
+        private int showRGBSox = 1;
+        private int displayAtTop = 1;
+
         public Main_Form()
         {
             InitializeComponent();
@@ -56,6 +60,8 @@ namespace LHON_Form
                     if (chk_show_tox.Checked == true)
                     {
                         direction_group_box.Enabled = true;
+                        chk_rgb_box.Enabled = true;
+                        chk_display_top.Enabled = true;
                         if (xy_direction_button.Checked) sox_track_bar_xy.Enabled = true;
                         if (yz_direction_button.Checked) sox_track_bar_yz.Enabled = true;
                         if (xz_direction_button.Checked) sox_track_bar_xz.Enabled = true;
@@ -66,11 +72,44 @@ namespace LHON_Form
                         sox_track_bar_xz.Enabled = false;
                         sox_track_bar_xy.Enabled = false;
                         sox_track_bar_yz.Enabled = false;
+                        chk_rgb_box.Enabled = false;
+                        chk_display_top.Enabled = false;
                     }
 
                 Update_show_opts();
 
             };
+
+            chk_rgb_box.CheckedChanged += (o, e) =>
+            {
+                if (chk_rgb_box.Checked == true)
+                {
+                    showRGBSox = 1;
+                }
+                else
+                {
+                    showRGBSox = 0;
+                }
+
+                Update_show_opts();
+
+            };
+
+            chk_display_top.CheckedChanged += (o, e) =>
+            {
+                if (chk_display_top.Checked == true)
+                {
+                    displayAtTop = 1;
+                }
+                else
+                {
+                    displayAtTop = 0;
+                }
+
+                Update_show_opts();
+
+            };
+
             txt_layer_to_display.TextChanged += (s, e) => Update_show_opts();
 
 
@@ -414,8 +453,8 @@ namespace LHON_Form
                 // thr+onDeath < UpperLimit/32*10^3/res ~ 220/ resolution
                 // dead diam < 4*prod/(scav*thr)
                 //Append_stat_ln(" mdl_nerve_r " + mdl_nerve_r + " resolution " + setts.resolution);
-                lbl_max_density.Text = (max_sum_tox/ (Pow2(mdl_nerve_r) * Math.PI * (setts.no3dLayers+1)/ setts.resolution )).ToString("0.00") + " mM/L";  //  in mMol/l => max should not be over 35
-                lbl_density.Text = (sum_tox  / (Pow2(mdl_nerve_r) * Math.PI * (setts.no3dLayers + 1)/ setts.resolution )).ToString("0.00") + " mM/L"; //  in mMol/l => max should not be over 35
+                lbl_max_density.Text = (max_sum_tox/ (Pow2(mdl_nerve_r) * Math.PI * (setts.no3dLayers+1)/ setts.resolution )).ToString("0.00") + " mM";  //  in mMol/l => max should not be over 35
+                lbl_density.Text = (sum_tox  / (Pow2(mdl_nerve_r) * Math.PI * (setts.no3dLayers + 1)/ setts.resolution )).ToString("0.00") + " mM"; //  in mMol/l => max should not be over 35
                 lbl_alive_axons_perc.Text = ((float)num_alive_axons[0] * 100 / mdl.n_axons).ToString("0.0") + "%";
                 var span = TimeSpan.FromSeconds(now / 1000);
                 lbl_sim_time.Text = string.Format("{0:00}:{1:00}:{2:00}", span.Minutes, span.Seconds, span.Milliseconds);
@@ -496,6 +535,7 @@ namespace LHON_Form
                     preprocessDone = false;
                     sim_stat = Sim_stat_enum.None;
                     setts.resolution = Read_float(s);
+                    
                     setts.no3dLayers = (int) (setts.resolution * Read_float(txt_3d_layers));
                     setts.toxLayerStart = (int)(setts.resolution * Read_float(txt_3d_tox_start));
                     setts.toxLayerStop = (int)(setts.resolution * Read_float(txt_3d_tox_stop));

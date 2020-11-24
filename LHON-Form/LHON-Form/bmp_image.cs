@@ -59,10 +59,12 @@ namespace LHON_Form
                 //[DWL] changed the denominator of 'red' to be 'on_death_tox' as opposed to 'death_threashold'
                 //[DWL] this way the chain reaction becomes clearly visible.
 
-                gpu.Launch(update_bmp_gride_size_2D, update_bmp_block_size_2D).cuda_update_image(im_size, bmp_im_size, bmp_image_compression_ratio,
-                    bmp_bytes_dev, bmp_tox_dev, tox_dev, axon_mask_dev, init_insult_mask_dev, death_tox_thres*(1+(chk_var_thr.Checked?death_var_thr:0)), show_opts_dev, setts.no3dLayers > 0 ? showdir: 0, setts.no3dLayers > 0 ? layerToDisplay: 0, imsq, setts.no3dLayers> 0 ? headLayer: 0, setts.no3dLayers);
+                gpu.Launch(update_bmp_gride_size_2D, update_bmp_block_size_2D).cuda_update_image(im_size, bmp_im_size, bmp_image_compression_ratio , (float)setts.no3dLayers/(float)bmp_im_size, 
+                    bmp_bytes_dev, bmp_tox_dev, tox_dev, axon_mask_dev, init_insult_mask_dev, death_tox_thres*(1+(chk_var_thr.Checked?death_var_thr:0)), show_opts_dev, setts.no3dLayers > 0 ? showdir: 0, setts.no3dLayers > 0 ? layerToDisplay: 0, imsq, setts.no3dLayers> 0 ? headLayer: 0, setts.no3dLayers, showRGBSox, displayAtTop);
 
                 gpu.CopyFromDevice(bmp_bytes_dev, bmp_bytes);
+                //[DWL] this is the array that allows the display of sox values on click
+                // it is copied from the GPU every time the image is updated
                 gpu.CopyFromDevice(bmp_tox_dev, bmp_tox);
 
                 fixed (byte* dat = &bmp_bytes[0, 0, 0])

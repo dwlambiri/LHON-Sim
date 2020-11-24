@@ -427,5 +427,11 @@ namespace LHON_Form
         {
 
         }
+
+        private void checkBox1_CheckedChanged_1(object sender, EventArgs e)
+        {
+
+        }
+
     }
 }
