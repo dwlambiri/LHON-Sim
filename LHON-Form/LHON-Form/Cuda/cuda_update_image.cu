@@ -1,4 +1,25 @@
 ﻿
+__device__ void setColor(int showRGBSox, float f, unsigned char& red, unsigned char& green, unsigned char& blue) {
+	red = (unsigned char)(f); // 0 - 255
+	if (showRGBSox) {
+		float gt = f - red;
+		if (red < 32) {
+			red = red * 4;
+			green = red;
+		}
+		if (red == 0) {
+			float g = gt * 255;
+			green = (unsigned char)(g);
+			red = green;
+			gt = g- green;
+			if (green == 0) {
+				blue = (unsigned char)(gt * 255);
+			}
+		}
+	}
+}
+
+
 extern "C" __global__  void cuda_update_image(unsigned short im_size, unsigned short bmp_im_size, float bmp_image_compression_ratio, float bmp_z_compression_ratio,
 	unsigned char* bmp, float* bmp_tox, float* tox, unsigned char* axon_mask, unsigned char* init_insult_mask, float tox_max, bool* show_opts, int showdir, int lineToDisplay, int imsq, int head, int no3d, int showRGBSox, int displayAtTop)
 {
@@ -30,17 +51,7 @@ extern "C" __global__  void cuda_update_image(unsigned short im_size, unsigned s
 					tox_pix_value = tox[xy + imsq * layer];
 					float tmp = tox_pix_value / tox_max;
 					if (tmp > 1) tmp = 1;
-					red = (unsigned char)(tmp * 255); // 0 - 255
-					if (showRGBSox) {
-						float gt = tmp * 255 - red;
-						if (gt > 0) {
-							green = (unsigned char)(gt * 255);
-							gt = gt * 255 - green;
-							if (gt > 0) {
-								blue = (unsigned char)(gt * 255);
-							}
-						}
-					}
+					setColor(showRGBSox, tmp * 255, red, green, blue);
 				}
 			}
 			else {
@@ -53,17 +64,7 @@ extern "C" __global__  void cuda_update_image(unsigned short im_size, unsigned s
 					tox_pix_value = tox[xy + imsq * layer];
 					float tmp = tox_pix_value / tox_max;
 					if (tmp > 1) tmp = 1;
-					red = (unsigned char)(tmp * 255); // 0 - 255
-					if (showRGBSox) {
-						float gt = tmp * 255 - red;
-						if (gt > 0) {
-							green = (unsigned char)(gt * 255);
-							gt = gt * 255 - green;
-							if (gt > 0) {
-								blue = (unsigned char)(gt * 255);
-							}
-						}
-					}
+					setColor(showRGBSox, tmp * 255, red, green, blue);
 					//red = 255;
 				}
 			}
@@ -74,53 +75,29 @@ extern "C" __global__  void cuda_update_image(unsigned short im_size, unsigned s
 			//green = blue = 0;
 			if (displayAtTop) {
 				if (show_opts[2]) {
+					float yf = y_bmp * bmp_z_compression_ratio;
+					int layer = (head + (int)(yf)) % (no3d + 2);
 					int xpos = (int)((float)(bmp_im_size - x_bmp) * bmp_image_compression_ratio);
 					int ypos = (int)((float)lineToDisplay * bmp_image_compression_ratio);
 					int xy = ypos * im_size + xpos;
 					//int xy = xpos * im_size + ypos;
-					float yf = y_bmp * bmp_z_compression_ratio;
-					int layer = (head + (int)(yf)) % (no3d + 2);
 					tox_pix_value = tox[xy + imsq * layer];
 					float tmp = tox_pix_value / tox_max;
 					if (tmp > 1) tmp = 1;
-					red = (unsigned char)(tmp * 255); // 0 - 255
-					//red = 255;
-					red = (unsigned char)(tmp * 255); // 0 - 255
-					if (showRGBSox) {
-						float gt = tmp * 255 - red;
-						if (gt > 0) {
-							green = (unsigned char)(gt * 255);
-							gt = gt * 255 - green;
-							if (gt > 0) {
-								blue = (unsigned char)(gt * 255);
-							}
-						}
-					}
+					setColor(showRGBSox, tmp * 255, red, green, blue);
 				}
 			}
 			else {
 				if ((y_bmp >= lineToDisplay) && (y_bmp < lineToDisplay + no3d) && show_opts[2]) {
+					int layer = (head + y_bmp - lineToDisplay) % (no3d + 2);
 					int xpos = (int)((float)(bmp_im_size - x_bmp) * bmp_image_compression_ratio);
 					int ypos = (int)((float)lineToDisplay * bmp_image_compression_ratio);
 					int xy = ypos * im_size + xpos;
 					//int xy = xpos * im_size + ypos;
-					int layer = (head + y_bmp - lineToDisplay) % (no3d + 2);
 					tox_pix_value = tox[xy + imsq * layer];
 					float tmp = tox_pix_value / tox_max;
 					if (tmp > 1) tmp = 1;
-					red = (unsigned char)(tmp * 255); // 0 - 255
-					//red = 255;
-					red = (unsigned char)(tmp * 255); // 0 - 255
-					if (showRGBSox) {
-						float gt = tmp * 255 - red;
-						if (gt > 0) {
-							green = (unsigned char)(gt * 255);
-							gt = gt * 255 - green;
-							if (gt > 0) {
-								blue = (unsigned char)(gt * 255);
-							}
-						}
-					}
+					setColor(showRGBSox, tmp * 255, red, green, blue);
 				}
 			}
 			break;
@@ -133,7 +110,6 @@ extern "C" __global__  void cuda_update_image(unsigned short im_size, unsigned s
 			tox_pix_value = tox[imsq * lineToDisplay + xy];
 			float tmp = tox_pix_value / tox_max;
 			if (tmp > 1) tmp = 1;
-			unsigned char normalized_toxin = (unsigned char)(tmp * 255); // 0 - 255
 			if (init_insult_mask[xy_bmp]) { blue = green = 127; /*red = 0;*/ }
 			else
 			{
@@ -158,20 +134,10 @@ extern "C" __global__  void cuda_update_image(unsigned short im_size, unsigned s
 
 				if (show_opts[2]) {
 					if (show_opts[0] == 0 && show_opts[1] == 0) {
-						red = normalized_toxin;
-						if (showRGBSox) {
-							float gt = tmp * 255 - red;
-							if (gt > 0) {
-								green = (unsigned char)(gt * 255);
-								gt = gt * 255 - green;
-								if (gt > 0) {
-									blue = (unsigned char)(gt * 255);
-								}
-							}
-						}
+						setColor(showRGBSox, tmp * 255, red, green, blue);
 					}
 					else {
-						red = normalized_toxin;
+						red = (unsigned char)(tmp * 255); // 0 - 255
 					}
 					// green = 255 - normalized_toxin;
 				}
