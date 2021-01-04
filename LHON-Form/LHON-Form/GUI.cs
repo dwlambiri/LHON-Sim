@@ -424,20 +424,20 @@ namespace LHON_Form
                 lbl_itr.Text = iteration.ToString("0");
                 if(sum_tox < 100)
                 {
-                    lbl_tox.Text = (sum_tox).ToString("0.0") + " yMol";
+                    lbl_tox.Text = sum_tox.ToString("0.0") + " ymol";
                 }
                 else
                 {
-                    lbl_tox.Text = (sum_tox / 1000).ToString("0.0") + " zMol";
+                    lbl_tox.Text = (sum_tox / 1000).ToString("0.0") + " zmol";
                 }
                 
                 if( max_sum_tox < 100)
                 {
-                    lbl_max_tox.Text = (max_sum_tox).ToString("0.0") + " yMol";
+                    lbl_max_tox.Text = max_sum_tox.ToString("0.0") + " ymol";
                 }
                 else
                 {
-                    lbl_max_tox.Text = (max_sum_tox / 1000).ToString("0.0") + " zMol";
+                    lbl_max_tox.Text = (max_sum_tox / 1000).ToString("0.0") + " zmol";
                 }
                 
                 // [DWL] yMol/area/height yM/V
@@ -445,16 +445,23 @@ namespace LHON_Form
                 //         5L / 0.1 m^3 = 50L / m^3
                 //         1 mol ~ 22.4 L => 1L ~ 1/22.4 mol
                 //         5/22.4 mol of oxygen in body
-                //         density = 50/22.4 mol/m^3 = 32*50/22.4 mol/m^3 = 71.4 g/m^4
-                //         SOX has to be x percent of the overall density to a max of 100%
+                //         density = 5/22.5 mol/100L = 2.23 mM
+                //  [DWL] Nov 26: Accordying to "How mitocondria produe reactive oxygen species" M. Murphy 2009
+                //        "the [O2] in air-saturated aquerous buffer at 37C is approx 200uM".
+                //        "plausible estimated for mitocondrian [O2] in vivo are in the range of 3-30 uM"
+                //        "tentative estimates of[O2-] within mitochondrial matrix is in range of 10-200 pM"
+                //
+                //  [DWL] => needs some review in light of above
+                //         SOX (ROS) has to be x percent of the overall density to a max of 100%
                 //         possible SOX upper limit  < 10% => 7 g / m^3 = 7000 mg / m^3
                 // DeathThr / Volume = the ymol*res/um^3 = thr*10^-24*res*10^18= thr*res mM/L < UpperLimit
                 // thr < UpperLimit/32*10^3/res ~ 220 / resolution
                 // thr+onDeath < UpperLimit/32*10^3/res ~ 220/ resolution
                 // dead diam < 4*prod/(scav*thr)
+                // [DWL] 
                 //Append_stat_ln(" mdl_nerve_r " + mdl_nerve_r + " resolution " + setts.resolution);
-                lbl_max_density.Text = (max_sum_tox/ (Pow2(mdl_nerve_r) * Math.PI * (setts.no3dLayers+1)/ setts.resolution )).ToString("0.00") + " mM";  //  in mMol/l => max should not be over 35
-                lbl_density.Text = (sum_tox  / (Pow2(mdl_nerve_r) * Math.PI * (setts.no3dLayers + 1)/ setts.resolution )).ToString("0.00") + " mM"; //  in mMol/l => max should not be over 35
+                lbl_max_density.Text = (1000*max_sum_tox/ (Pow2(mdl_nerve_r) * Math.PI * (setts.no3dLayers+1)/ setts.resolution )).ToString("0.00") + " nM";  //  in mMol => max should not be over 35
+                lbl_density.Text = (1000*sum_tox  / (Pow2(mdl_nerve_r) * Math.PI * (setts.no3dLayers + 1)/ setts.resolution )).ToString("0.00") + " nM"; //  in mMol => max should not be over 35
                 lbl_alive_axons_perc.Text = ((float)num_alive_axons[0] * 100 / mdl.n_axons).ToString("0.0") + "%";
                 var span = TimeSpan.FromSeconds(now / 1000);
                 lbl_sim_time.Text = string.Format("{0:00}:{1:00}:{2:00}", span.Minutes, span.Seconds, span.Milliseconds);

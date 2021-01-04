@@ -57,8 +57,8 @@ namespace LHON_Form
 
         private int Mod(int x, int m)
         {
-            int r = x % m;
-            return r < 0 ? r + m : r;
+            int temp = x % m;
+            return temp < 0 ? temp + m : temp;
         }
 
         unsafe private void Run_Alg_GPU()
