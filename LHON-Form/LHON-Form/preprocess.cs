@@ -28,13 +28,23 @@ namespace LHON_Form
         [DWL] We know that the evolution is about 6 to 9 months. Thus
         [DWL] the iteration constant must be 9month/numIter.
         [DWL] RTU = real realTime unit (realTime measured in units of physical realTime)
+        [DWL] 2D
         Constant                        UI Unit                  Algorithm Unit          Conversion Factor
         k_detox, k_rate                  1 / RTU                   1 / itr               K / timeRes
         k_tox_prod                       zmol / um^2 /RTU          tox / pix / itr       K / spatialRes ^ 2 / timeRes
         death_tox_thres, insult_tox      zmol / um^2               tox / pix             K / spatialRes ^ 2
+
+         Value RTU          = (Value / timeRes)  itr
+         Value zmol / um^2  = (Value / spatialRes ^ 2)  zmol / pix
+
+        [DWL] 3D
+        Constant                        UI Unit                  Algorithm Unit          Conversion Factor
+        k_detox, k_rate                  1 / RTU                   1 / itr               K / timeRes
+        k_tox_prod                       zmol / um^3 /RTU          tox / pix / itr       K / spatialRes ^ 3 / timeRes
+        death_tox_thres, insult_tox      zmol / um^3               tox / pix             K / spatialRes ^ 3
         
             Value RTU          = (Value / timeRes)  itr
-            Value zmol / um^2  = (Value / spatialRes ^ 2)  zmol / pix
+            Value zmol / um^3  = (Value / spatialRes ^ 3)  zmol / pix
         */
 
         private float k_detox_intra, k_detox_extra, k_tox_prod, death_tox_thres, death_var_thr, insult_tox, on_death_tox,
